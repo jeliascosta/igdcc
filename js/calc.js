@@ -2,7 +2,8 @@
 
 // --- Tabela de referência (nota 100) ---
 const temposRefOrig = {
-    "2.4km": { idade: 40, tempo: "08:10", sexo: 'M' },
+    "2.4km": { idade: 40, tempo: "08:13", sexo: 'M' },
+    "5km": { idade: 46, tempo: "26:40", sexo: 'F' },
     "10km": { idade: 38, tempo: "40:00", sexo: 'M' },
     "meia": { idade: 45, tempo: "120:00", sexo: 'F' }
 };
@@ -11,6 +12,7 @@ window.temposRefOrig = temposRefOrig; // Expor para index.html
 // --- Mapear distâncias base para km ---
 const distanciasBase = {
     "2.4km": 2.4,
+    "5km": 5,
     "10km": 10,
     "meia": 21.0975
 };
@@ -194,6 +196,73 @@ function tempoRiegel(t1, d1, d2, expoente = EXPOENTE_RIEGEL_AMADOR) {
 }
 
 // --- Função tempoRefPorDistanciaExp híbrida (interpolação + Riegel) ---
+// function tempoRefPorDistanciaExp(distanciaKm, idade, sexo) {
+//     const sexoUp = sexo.toUpperCase();
+//     const dKm = parseFloat(distanciaKm);
+//     const nomes = Object.keys(distanciasBase).map(k => ({
+//         nome: k,
+//         km: distanciasBase[k]
+//     }));
+
+//     // --- Encontra a distância mais próxima (maior em caso de empate) ---
+//     let maisProxima = nomes[0];
+//     let menorDiff = Math.abs(dKm - maisProxima.km);
+//     for (let i = 1; i < nomes.length; i++) {
+//         const diff = Math.abs(dKm - nomes[i].km);
+//         if (diff < menorDiff || (diff === menorDiff && nomes[i].km > maisProxima.km)) {
+//             maisProxima = nomes[i];
+//             menorDiff = diff;
+//         }
+//     }
+
+//     // --- Se distância exata ---
+//     if (Math.abs(maisProxima.km - dKm) < 0.001) {
+//         const base = temposRefBase[maisProxima.nome][sexoUp];
+//         const fatorOrig = interpolarFatorIdadePorDistancia(base.idadeOrig, sexoUp);
+//         const fatorDesejado = interpolarFatorIdadePorDistancia(idade, sexoUp);
+//         return base.tSeg * (fatorDesejado / fatorOrig);
+//     }
+
+//     // --- Determinar vizinhas ---
+//     let menor = nomes[0], maior = nomes[nomes.length - 1];
+//     for (let i = 1; i < nomes.length; i++) {
+//         if (dKm <= nomes[i].km) {
+//             menor = nomes[i - 1];
+//             maior = nomes[i];
+//             break;
+//         }
+//     }
+
+//     // --- Ajustes de idade ---
+//     const fator = interpolarFatorIdadePorDistancia(idade, sexoUp);
+//     const baseMenor = temposRefBase[menor.nome][sexoUp];
+//     const baseMaior = temposRefBase[maior.nome][sexoUp];
+//     const tMenor = baseMenor.tSeg *
+//         (fator / interpolarFatorIdadePorDistancia(baseMenor.idadeOrig, sexoUp));
+//     const tMaior = baseMaior.tSeg *
+//         (fator / interpolarFatorIdadePorDistancia(baseMaior.idadeOrig, sexoUp));
+
+//     // --- Riegel ajustado (expoente mais conservador para amadores) ---
+//     const expoRiegel = 1.07; // típico de corredores recreativos
+//     const tRiegel = tMenor * Math.pow(dKm / menor.km, expoRiegel);
+
+//     // --- Interpolação entre distâncias conhecidas ---
+//     const p = (dKm - menor.km) / (maior.km - menor.km);
+//     const tInterp = tMenor + (tMaior - tMenor) * p;
+
+//     // --- Peso adaptativo: mais Riegel quanto mais distante das bases ---
+//     const distMin = Math.min(
+//         ...nomes.map(n => Math.abs(dKm - n.km))
+//     );
+//     const distMax = Math.max(...nomes.map(n => n.km));
+//     const pesoRiegel = Math.min(1, Math.pow(distMin / distMax, 0.7) * 2); // curva suave 0–1
+//     const pesoInterp = 1 - pesoRiegel;
+
+//     // --- Combinação adaptativa ---
+//     return tInterp * pesoInterp + tRiegel * pesoRiegel;
+// }
+
+// --- Função tempoRefPorDistanciaExp apenas interpolação ---
 function tempoRefPorDistanciaExp(distanciaKm, idade, sexo) {
     const sexoUp = sexo.toUpperCase();
     const dKm = parseFloat(distanciaKm);
@@ -240,25 +309,13 @@ function tempoRefPorDistanciaExp(distanciaKm, idade, sexo) {
     const tMaior = baseMaior.tSeg *
         (fator / interpolarFatorIdadePorDistancia(baseMaior.idadeOrig, sexoUp));
 
-    // --- Riegel ajustado (expoente mais conservador para amadores) ---
-    const expoRiegel = 1.07; // típico de corredores recreativos
-    const tRiegel = tMenor * Math.pow(dKm / menor.km, expoRiegel);
-
-    // --- Interpolação entre distâncias conhecidas ---
+    // --- Interpolação linear entre distâncias conhecidas ---
     const p = (dKm - menor.km) / (maior.km - menor.km);
     const tInterp = tMenor + (tMaior - tMenor) * p;
 
-    // --- Peso adaptativo: mais Riegel quanto mais distante das bases ---
-    const distMin = Math.min(
-        ...nomes.map(n => Math.abs(dKm - n.km))
-    );
-    const distMax = Math.max(...nomes.map(n => n.km));
-    const pesoRiegel = Math.min(1, Math.pow(distMin / distMax, 0.7) * 2); // curva suave 0–1
-    const pesoInterp = 1 - pesoRiegel;
-
-    // --- Combinação adaptativa ---
-    return tInterp * pesoInterp + tRiegel * pesoRiegel;
+    return tInterp;
 }
+
 
 // -------------------CÁLCULO DE NOTAS----------------------------
 
@@ -327,7 +384,7 @@ function proporcaoPorNota(nota) {
     const proporcao100 = 1.0;
     const proporcao0 = 2.0;
     const nota0 = 0;
-    const nota90 = 90;
+    const notaElite = 90;
     const nota100 = 100;
 
     if (nota >= nota100) {
@@ -345,13 +402,13 @@ function proporcaoPorNota(nota) {
 
     // --- Região 0–100 com expoente variável contínuo ---
     let expoente;
-    if (nota <= nota90) {
+    if (nota <= notaElite) {
         // transição suave 0→90: 1.6 → 1.0
-        const t = (nota - nota0) / (nota90 - nota0);
+        const t = (nota - nota0) / (notaElite - nota0);
         expoente = 2.3 - 1.2 * t;
     } else {
         // transição suave 90→100: 1.0 → 0.6
-        const t = (nota - nota90) / (nota100 - nota90);
+        const t = (nota - notaElite) / (nota100 - notaElite);
         expoente = 1.1 - 0.5 * t;
     }
 
@@ -359,6 +416,46 @@ function proporcaoPorNota(nota) {
     const t = (nota - nota0) / (nota100 - nota0);
     return proporcao0 + (proporcao100 - proporcao0) * Math.pow(t, expoente);
 }
+
+// function proporcaoPorNota(nota) {
+//     const proporcao100 = 1.0;
+//     const proporcao0 = 2.0;
+//     const nota0 = 0;
+//     const nota90 = 90;
+//     const nota100 = 100;
+
+//     if (nota >= nota100) {
+//         // acima de 100 → ~1% mais rápido por ponto
+//         const fatorExtra = 0.01;
+//         return proporcao100 * (1 - (nota - 100) * fatorExtra);
+//     }
+
+//     if (nota <= 0) {
+//         // abaixo de 0 → dobra novamente o tempo (simétrico)
+//         const proporcaoNeg = proporcao0 * 2.0;
+//         const t = (-nota) / 100;
+//         return proporcao0 + (proporcaoNeg - proporcao0) * Math.pow(t, 0.6);
+//     }
+
+//     // --- Região 0–100 ---
+//     let expoente;
+//     if (nota <= nota90) {
+//         // 0→90: curva sobrelinear (expoente > 1)
+//         // 2.0 → 1.1 mantém suavidade
+//         const t = (nota - nota0) / (nota90 - nota0);
+//         expoente = 2.0 - 0.9 * t;
+//     } else {
+//         // 90→100: curva sublinear (expoente < 1)
+//         // 1.0 → 0.6 cria suavização até 100
+//         const t = (nota - nota90) / (nota100 - nota90);
+//         expoente = 1.0 - 0.4 * t;
+//     }
+
+//     // cálculo da proporção usando expoente dinâmico
+//     const t = (nota - nota0) / (nota100 - nota0);
+//     return proporcao0 + (proporcao100 - proporcao0) * Math.pow(t, expoente);
+// }
+
 
 function calcularNota(tempo, idade, sexo, distanciaKm) {
     const tempoSeg = tempoParaSegundos(tempo);
@@ -426,51 +523,3 @@ function tempoEPaceParaNota(nota, idade, sexo, distanciaKm) {
         pace: `${paceMinInt}:${String(paceSeg).padStart(2, '0')}`,
     };
 }
-
-
-// -------------------IMPRESSÃO DE TABELA----------------------------
-
-function imprimirTabelaMaxNotaComFator() {
-    const idades = [30, 33, 40, 45, 55];
-    const distancias = Object.keys(temposRefOrig);
-
-    console.log("Tempo para nota 100 por distância e idade (M/F) com fator de idade:\n");
-    console.log(`Idade | ${distancias.map(d => d.padEnd(20)).join(" | ")}`);
-    console.log("-".repeat(9 + distancias.length * 25));
-
-    for (const idade of idades) {
-        let linha = `${idade.toString().padEnd(5)}| `;
-        for (const distancia of distancias) {
-            const resultadoM = tempoEPaceParaNota(100, idade, "M", distanciasBase[distancia]);
-            const resultadoF = tempoEPaceParaNota(100, idade, "F", distanciasBase[distancia]);
-            linha += `M:${resultadoM.tempo}(${resultadoM.fatorIdade})[${resultadoM.pace}] F:${resultadoF.tempo}(${resultadoF.fatorIdade})[${resultadoF.pace}] | `;
-        }
-        console.log(linha);
-    }
-}
-
-// --- Exemplo de uso ---
-// imprimirTabelaMaxNotaComFator();
-
-console.log("TEMPOS REF", temposRefBase);
-
-// --- Chamada ---
-// imprimirTabelaMaxNotaComFator();
-
-// // --- Exemplos ---
-// console.log("5km, M40, 22:30 =>", calcularNota("22:30", 40, "M", 5));
-// console.log("15km, F35, 1:20:00 =>", calcularNota("1:20:00", 35, "F", 15));
-// console.log("7km, M30, 32:00 =>", calcularNota("32:00", 30, "M", 7));
-// console.log("2.4km, M30, 08:20 =>", calcularNota("08:20", 30, "M", 2.4));
-
-// //---------------------------------------------------------------------------------------------
-
-// console.log("\nTempo para nota 100, M40, 2.4km =>", tempoParaNota(100, 40, "M", 2.4).tempo); // 08:15
-// console.log("Tempo para nota 85, F45, meia =>", tempoParaNota(85, 45, "F", 21.0975).tempo); // Exemplo adicional
-// console.log("\nTempo para nota 100, M45, 15km =>", tempoParaNota(100, 45, "M", 15).tempo); // 01:15
-// console.log("16.08km, M45, 1:08:59 =>", calcularNota("1:33:00", 45, "M", 16.08));
-// console.log("15.11km, M38, 1:13:53 =>", calcularNota("1:13:53", 38, "M", 15.11));
-// console.log("10km, M38, 41:47 =>", calcularNota("41:47", 38, "M", 10));
-// console.log("10km, M30, 41:47 =>", calcularNota("41:47", 30, "M", 10));
-// console.log("\nTempo para nota 100, M30, 10km =>", tempoParaNota(100, 30, "M", 10).tempo); // 00:41:47
-// console.log("2.53km, M38, 09:12 =>", calcularNota("09:12", 38, "M", 2.53));
