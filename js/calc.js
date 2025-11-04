@@ -4,7 +4,7 @@
 const temposRefOrig = {
     "2.4km": { idade: 40, tempo: "08:10", sexo: 'M' },
     "10km": { idade: 38, tempo: "40:00", sexo: 'M' },
-    "meia": { idade: 40, tempo: "120:00", sexo: 'F' }
+    "meia": { idade: 45, tempo: "120:00", sexo: 'F' }
 };
 window.temposRefOrig = temposRefOrig; // Expor para index.html
 
@@ -19,41 +19,41 @@ window.distanciasBase = distanciasBase; // Expor para index.html
 // -------------------FATORES DE IDADE----------------------------
 
 // --- Fatores por idade ---
-const fatorIdadeMascMarujo = [
-    { teto: 25, fator: 0.828 }, // 9:36  / 11:36
-    { teto: 33, fator: 0.862 }, // 10:00 / 11:36
-    { teto: 39, fator: 0.931 }, // 10:48 / 11:36
-    { teto: 45, fator: 1.000 }, // 11:36 / 11:36
-    { teto: 49, fator: 1.138 }, // 13:12 / 11:36
-    { teto: 60, fator: 1.276 }  // 14:48 / 11:36 (sem divisão fina além de 50+)
-];
-const fatorIdadeFemMarujo = [
-    { teto: 25, fator: 0.824 },
-    { teto: 33, fator: 0.883 },
-    { teto: 39, fator: 0.941 },
-    { teto: 45, fator: 1.000 },
-    { teto: 49, fator: 1.059 },
-    { teto: 60, fator: 1.176 }
-];
+// const fatorIdadeMascMarujo = [
+//     { teto: 25, fator: 0.828 }, // 9:36  / 11:36
+//     { teto: 33, fator: 0.862 }, // 10:00 / 11:36
+//     { teto: 39, fator: 0.931 }, // 10:48 / 11:36
+//     { teto: 45, fator: 1.000 }, // 11:36 / 11:36
+//     { teto: 49, fator: 1.138 }, // 13:12 / 11:36
+//     { teto: 60, fator: 1.276 }  // 14:48 / 11:36 (sem divisão fina além de 50+)
+// ];
+// const fatorIdadeFemMarujo = [
+//     { teto: 25, fator: 0.824 },
+//     { teto: 33, fator: 0.883 },
+//     { teto: 39, fator: 0.941 },
+//     { teto: 45, fator: 1.000 },
+//     { teto: 49, fator: 1.059 },
+//     { teto: 60, fator: 1.176 }
+// ];
 
-const fatorIdadeMascNaval = [
-    { teto: 25, fator: 0.875 },
-    { teto: 33, fator: 0.910 },
-    { teto: 39, fator: 0.980 },
-    { teto: 45, fator: 1.000 },
-    { teto: 49, fator: 1.088 },
-    { teto: 54, fator: 1.124 },
-    { teto: 60, fator: 1.161 }
-];
-const fatorIdadeFemNaval = [
-    { teto: 25, fator: 0.826 },
-    { teto: 33, fator: 0.870 },
-    { teto: 39, fator: 0.927 },
-    { teto: 45, fator: 1.000 },
-    { teto: 49, fator: 1.071 },
-    { teto: 54, fator: 1.117 },
-    { teto: 60, fator: 1.145 }
-];
+// const fatorIdadeMascNaval = [
+//     { teto: 25, fator: 0.875 },
+//     { teto: 33, fator: 0.910 },
+//     { teto: 39, fator: 0.980 },
+//     { teto: 45, fator: 1.000 },
+//     { teto: 49, fator: 1.088 },
+//     { teto: 54, fator: 1.124 },
+//     { teto: 60, fator: 1.161 }
+// ];
+// const fatorIdadeFemNaval = [
+//     { teto: 25, fator: 0.826 },
+//     { teto: 33, fator: 0.870 },
+//     { teto: 39, fator: 0.927 },
+//     { teto: 45, fator: 1.000 },
+//     { teto: 49, fator: 1.071 },
+//     { teto: 54, fator: 1.117 },
+//     { teto: 60, fator: 1.145 }
+// ];
 
 const fatorIdadeMascMesclado = [
     { teto: 25, fator: 0.9 }, //CASNAV
@@ -75,24 +75,24 @@ const fatorIdadeFemMesclado = [
     { teto: 60, fator: 1.176 }, //Marujo
 ];
 
-const fatorSexoMarujo = [
-    { teto: 25, fator: 1.167 },
-    { teto: 33, fator: 1.200 },
-    { teto: 39, fator: 1.185 },
-    { teto: 45, fator: 1.174 },
-    { teto: 49, fator: 1.091 },
-    { teto: 60, fator: 1.081 }
-];
+// const fatorSexoMarujo = [
+//     { teto: 25, fator: 1.167 },
+//     { teto: 33, fator: 1.200 },
+//     { teto: 39, fator: 1.185 },
+//     { teto: 45, fator: 1.174 },
+//     { teto: 49, fator: 1.091 },
+//     { teto: 60, fator: 1.081 }
+// ];
 
-const fatorSexoNaval = [
-    { teto: 25, fator: 1.163 },
-    { teto: 33, fator: 1.175 },
-    { teto: 39, fator: 1.164 },
-    { teto: 45, fator: 1.230 },
-    { teto: 49, fator: 1.210 },
-    { teto: 54, fator: 1.220 },
-    { teto: 60, fator: 1.210 }
-];
+// const fatorSexoNaval = [
+//     { teto: 25, fator: 1.163 },
+//     { teto: 33, fator: 1.175 },
+//     { teto: 39, fator: 1.164 },
+//     { teto: 45, fator: 1.230 },
+//     { teto: 49, fator: 1.210 },
+//     { teto: 54, fator: 1.220 },
+//     { teto: 60, fator: 1.210 }
+// ];
 
 const fatorSexo = [
     { teto: 25, fator: 1.167 }, //Marujo
