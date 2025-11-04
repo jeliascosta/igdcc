@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const pace = document.getElementById('pace').value;
                 nota = calcularNotaPorPace(pace, idade, sexo, distancia);
             }
-            console.log('Nota calculada:', nota);
             document.getElementById('nota').textContent = 
                 `Nota: ${nota.toFixed(2)} pontos`;
         } catch (error) {
