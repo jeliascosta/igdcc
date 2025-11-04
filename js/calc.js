@@ -325,8 +325,8 @@ function calcularNotaPorPace(pace, idade, sexo, distancia) {
 
 function proporcaoPorNota(nota) {
     const proporcao100 = 1.0;
-    const proporcao50 = 2;
-    const nota50 = 50;
+    const proporcao0 = 2.0;
+    const nota0 = 0;
     const nota90 = 90;
     const nota100 = 100;
 
@@ -338,29 +338,27 @@ function proporcaoPorNota(nota) {
 
     if (nota <= 0) {
         // abaixo de 0 → dobra novamente o tempo (simétrico)
-        const proporcao0 = proporcao50 * 2.0; // = 4
-        const t = (0 - nota) / 50;
-        return proporcao50 + (proporcao0 - proporcao50) * Math.pow(t, 0.6);
+        const proporcaoNeg = proporcao0 * 2.0;
+        const t = (-nota) / 100;
+        return proporcao0 + (proporcaoNeg - proporcao0) * Math.pow(t, 0.6);
     }
 
-    // --- Região 50–100 ---
+    // --- Região 0–100 com expoente variável contínuo ---
     let expoente;
     if (nota <= nota90) {
-        // transição suave de 50→90: 1.6 → 1.0
-        const t = (nota - nota50) / (nota90 - nota50);
-        expoente = 1.6 - 0.5 * t; // decresce linearmente
+        // transição suave 0→90: 1.6 → 1.0
+        const t = (nota - nota0) / (nota90 - nota0);
+        expoente = 1.6 - 0.5 * t;
     } else {
-        // transição suave de 90→100: 1.0 → 0.6
+        // transição suave 90→100: 1.0 → 0.6
         const t = (nota - nota90) / (nota100 - nota90);
         expoente = 1.0 - 0.4 * t;
     }
 
-    // cálculo da proporção
-    const t = (nota - nota50) / (nota100 - nota50);
-    return proporcao50 + (proporcao100 - proporcao50) * Math.pow(t, expoente);
+    // cálculo da proporção usando expoente dinâmico
+    const t = (nota - nota0) / (nota100 - nota0);
+    return proporcao0 + (proporcao100 - proporcao0) * Math.pow(t, expoente);
 }
-
-
 
 function calcularNota(tempo, idade, sexo, distanciaKm) {
     const tempoSeg = tempoParaSegundos(tempo);
