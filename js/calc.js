@@ -2,7 +2,7 @@
 
 // --- Tabela de referência (nota 100) ---
 const temposRefOrig = {
-    "2.4km": { idade: 40, tempo: "08:13", sexo: 'M' },
+    "2.4km": { idade: 30, tempo: "08:14", sexo: 'M' },
     "5km": { idade: 46, tempo: "26:40", sexo: 'F' },
     "10km": { idade: 38, tempo: "40:00", sexo: 'M' },
     "meia": { idade: 45, tempo: "120:00", sexo: 'F' }
