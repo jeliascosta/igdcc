@@ -84,15 +84,117 @@ document.addEventListener('DOMContentLoaded', function () {
                 const pace = document.getElementById('pace').value;
                 nota = calcularNotaPorPace(pace, idade, sexo, distancia);
             }
-            // Renderiza a nota como "big number" (apenas parte inteira).
-            // Fundo azul para masculino (M), rosa para feminino (F).
-            const inteiro = Math.floor(Number(nota) || 0);
-            const classeSexo = (sexo === 'F') ? 'fem' : (sexo === 'M' ? 'masc' : 'unknown');
-            document.getElementById('nota').innerHTML = `<div class="nota-card ${classeSexo}">${inteiro}</div>`;
-        } catch (error) {
-            document.getElementById('nota').textContent =
-                `Erro: ${error.message}`;
-        }
+            // Renderiza a "share card" estilo app de corrida
+            const inteiro = Math.max(0, Math.min(100, Math.floor(Number(nota) || 0)));
+
+            // zona de exemplo: décadas, 90+ é "90-100"
+            function zonaLabel(n) {
+                if (n >= 90) return '90-100';
+                const low = Math.floor(n / 10) * 10;
+                const high = low + 9;
+                return `${low}-${high}`;
+            }
+
+            const frases = {
+                '50-59': 'Entrada — comece a treinar regularmente.',
+                '60-69': 'Progredindo — consistência importante.',
+                '70-79': 'Bom nível — continue a melhorar.',
+                '80-89': 'Excelente — performance competitiva.',
+                '90-100': 'Top — desempenho de elite!'
+            };
+
+            // utilitários de cor (hex)
+            function hexToRgb(hex) {
+                const h = hex.replace('#','');
+                const bigint = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h,16);
+                return [(bigint>>16)&255,(bigint>>8)&255, bigint&255];
+            }
+            function rgbToHex([r,g,b]) { return '#' + [r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+            function interpHex(a,b,t){
+                const ra = hexToRgb(a), rb = hexToRgb(b);
+                const r = Math.round(ra[0] + (rb[0]-ra[0])*t);
+                const g = Math.round(ra[1] + (rb[1]-ra[1])*t);
+                const bl = Math.round(ra[2] + (rb[2]-ra[2])*t);
+                return rgbToHex([r,g,bl]);
+            }
+
+            // paletas
+            const pale = sexo === 'F' ? '#ffe8f3' : '#bce0faff'; // nota 50
+            const strong = sexo === 'F' ? '#ff4f86' : '#096cd5ff'; // nota 90 start
+            const gold = '#ffd166'; // final gold
+
+            let bgStart, bgEnd;
+            if (inteiro < 90) {
+                const t = Math.max(0, (inteiro - 50) / 40); // 50->90
+                bgStart = interpHex(pale, strong, Math.max(0, t*0.6));
+                bgEnd = interpHex(pale, strong, t);
+            } else {
+                const t2 = (inteiro - 90) / 10; // 0..1
+                // transição do strong para gold
+                bgStart = interpHex(strong, gold, Math.min(1, t2*0.6));
+                bgEnd = interpHex(strong, gold, Math.min(1, t2));
+            }
+
+            // legibilidade: calcula luminance
+            function luminance(hex){
+                const [r,g,b] = hexToRgb(hex);
+                return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            }
+
+            // cor do texto — padrão: branco/preto conforme luminance do fundo
+            let textColor;
+            if (sexo === 'F') {
+                // base desejada para mulheres
+                const base = '#3d0060';
+                const lumBg = luminance(bgEnd);
+                // se fundo muito escuro -> clarear a base aproximando de branco
+                if (lumBg < 0.35) {
+                    const mix = Math.min(0.9, 0.25 + (0.35 - lumBg)); // 0.25..~0.9
+                    textColor = interpHex(base, '#ffffff', mix);
+                } else if (lumBg > 0.75) {
+                    // se fundo muito claro -> escurecer a base aproximando de preto
+                    const mix = Math.min(0.9, 0.25 + (lumBg - 0.75));
+                    textColor = interpHex(base, '#000000', mix);
+                } else {
+                    // fundo médio -> usar a base diretamente
+                    textColor = base;
+                }
+            } else {
+                // masculino / neutro: variação em torno de #003c59
+                const baseM = '#002e77';
+                const lumBgM = luminance(bgEnd);
+                if (lumBgM < 0.30) {
+                    // fundo muito escuro -> clarear o baseM em direção ao branco
+                    const mix = Math.min(0.9, 0.35 + (0.30 - lumBgM)); // 0.35..~0.9
+                    textColor = interpHex(baseM, '#ffffff', mix);
+                } else if (lumBgM > 0.78) {
+                    // fundo muito claro -> escurecer o baseM em direção ao preto
+                    const mix = Math.min(0.9, 0.25 + (lumBgM - 0.78));
+                    textColor = interpHex(baseM, '#000000', mix);
+                } else {
+                    // fundo médio -> usar a base diretamente
+                    textColor = baseM;
+                }
+            }
+
+            const zone = zonaLabel(inteiro);
+            const phrase = frases[zone] || (inteiro >= 90 ? frases['90-100'] : 'Boa performance');
+
+            const cardHtml = `
+                <div class="share-card" style="background: linear-gradient(180deg, ${bgStart}, ${bgEnd}); color:${textColor}">
+                    <div class="share-top">
+                        <span class="main">Meu IGDCC<span class="rev">REV2</span></span>
+                    </div>
+                    <div class="score-big">${inteiro}</div>
+                    <div class="zone-small">${zone}</div>
+                    <div class="zone-phrase">${phrase}</div>
+                </div>
+            `;
+            document.getElementById('nota').innerHTML = cardHtml;
+         } catch (error) {
+             document.getElementById('nota').textContent =
+                 `Erro: ${error.message}`;
+         }
     });
 
     preencherTabelaReferencia();
