@@ -62,7 +62,7 @@ const fatorIdadeMascMesclado = [
     { teto: 33, fator: 0.915 }, //CASNAV
     { teto: 39, fator: 0.931 }, //Marujo
     { teto: 45, fator: 1.000 }, //Marujo
-    { teto: 49, fator: 1.138 }, //Marujo
+    { teto: 49, fator: 1.088 }, //Marujo
     { teto: 54, fator: 1.124 }, //Naval
     { teto: 60, fator: 1.276 }, //Marujo (sem divisão fina além de 50+)
 ];
