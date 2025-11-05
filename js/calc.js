@@ -68,11 +68,11 @@ const fatorIdadeMascMesclado = [
 ];
 
 const fatorIdadeFemMesclado = [
-    { teto: 25, fator: 0.826 }, //Naval
-    { teto: 33, fator: 0.883 }, //Marujo
+    { teto: 25, fator: 0.9 }, //CASNAV
+    { teto: 33, fator: 0.915 }, //CASNAV
     { teto: 39, fator: 0.927 }, //Naval
     { teto: 45, fator: 1.000 }, //Marujo
-    { teto: 49, fator: 1.071 }, //Naval
+    { teto: 49, fator: 1.059 }, //Marujo
     { teto: 54, fator: 1.117 }, //Naval        
     { teto: 60, fator: 1.176 }, //Marujo
 ];
