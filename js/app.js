@@ -97,22 +97,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const frasesHomem = {
-                '50-59': '🔥 VIBRANDOOO! 🔥',
-                '60-69': '💪🔥 CADÊNCIA CORREDOR!!! 🔥💪',
-                '70-79': '🏃‍♂️💪 QUE TREINO TOP!! 💪🏃‍♂️',
-                '80-89': '😯🚀 SÉRIO ISSO?!! 🚀😯',
+                '50-59': '💪 BORA VIBRAR!!! 💪',
+                '60-69': '💪😁 ZONA 2, TÁ PAGO!! 😁💪',
+                '70-79': '🏃‍♂️👏 QUE TREINO TOP!! 👏🏃‍♂️',
+                '80-89': '🔥🏃‍♂️👉 SÉRIO ISSO?!! 👈🏃‍♂️🔥',
                 '90-99': '😱🏅⚡ DANGER ZONE ⚡🏅😱',
                 '100': '🏆🥇⚓ Lenda Naval ⚓🥇🏆'
             };
             const frasesMulher = {
-                '50-59': '🔥 VIBRANDOOO! 🔥',
-                '60-69': '💪🔥 CADÊNCIA CORREDORA!!! 🔥💪',
-                '70-79': '🏃‍♂️💪 QUE TREINO TOP!! 💪🏃‍♂️',
-                '80-89': '😯🚀 SÉRIO ISSO?!! 🚀😯',
-                '90-99': '😱🏅⚡ DANGER ZONE ⚡🏅😱',
-                '100': '🏆🥇⚓ Lenda Naval ⚓🥇🏆'
+                '70-79': '🏃‍♀️👏 QUE TREINO TOP!! 👏🏃‍♀️',
+                '80-89': '😯🏃‍♀️👉 SÉRIO ISSO?!! 👈🏃‍♀️😯',
             };
-            const frases = sexo === 'F' ? frasesMulher : frasesHomem;
+            const frases = sexo === 'F' ? { ...frasesHomem, ...frasesMulher } : frasesHomem;
 
             // utilitários de cor (hex)
             function hexToRgb(hex) {
@@ -235,15 +231,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="zone-small">${zone}</div>
                     <div class="card-meta" style="display:flex;gap:12px;margin-top:8px;align-items:center;justify-content:center;">
                         <div class="meta-item" style="text-align:center">
-                            <div style="font-size:.75rem;font-weight:700;opacity:.9">🛣️Distância</div>
+                            <div style="font-size:.75rem;font-weight:700;opacity:.9">🛣️ Distância</div>
                             <div style="font-size:.95rem;font-weight:800">${distLabel}</div>
                         </div>
                         <div class="meta-item" style="text-align:center">
-                            <div style="font-size:.75rem;font-weight:700;opacity:.9">🕒Tempo</div>
+                            <div style="font-size:.75rem;font-weight:700;opacity:.9">🕒 Tempo</div>
                             <div style="font-size:.95rem;font-weight:800">${displayTempo}</div>
                         </div>
                         <div class="meta-item" style="text-align:center">
-                            <div style="font-size:.75rem;font-weight:700;opacity:.9">🏃🏻‍♂️‍➡️Pace</div>
+                            <div style="font-size:.75rem;font-weight:700;opacity:.9">🏃🏻‍♂️‍➡️ Pace</div>
                             <div style="font-size:.95rem;font-weight:800">${displayPace} /km</div>
                         </div>
                     </div>

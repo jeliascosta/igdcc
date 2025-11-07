@@ -219,8 +219,7 @@ tr:hover {
 
 /* Share card estilo app de corrida */
 .share-card{
-    width: 360px;
-    max-width: 100%;
+    width: 'fit-content';
     border-radius: 20px;
     padding: 18px;
     box-shadow: 0 20px 40px rgba(15,23,42,0.18);
@@ -290,6 +289,7 @@ tr:hover {
 
 /* zona pequena (subtítulo) */
 .share-card .zone-small{
+    display:none;
     font-size: 1.0rem;      /* menor que antes */
     font-weight: 700;
     opacity: 0.95;
@@ -382,7 +382,7 @@ tr:hover {
     font-weight:800;
 }
 
-/* responsividade: empilha no mobile */
+/* responsividade: empilha no mobile
 @media (max-width:420px){
     .share-card{ width: 92%; padding: 14px; border-radius: 16px; }
     .share-card .score-big{ font-size: 3rem; }
@@ -392,4 +392,4 @@ tr:hover {
     }
     .share-card .card-left{ align-items:center; }
     .share-card .card-meta{ gap:10px; }
-}
+} */
