@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             const frasesMulher = {
                 '70-79': '🏃‍♀️👏 QUE TREINO TOP!! 👏🏃‍♀️',
-                '80-89': '😯🏃‍♀️👉 SÉRIO ISSO?!! 👈🏃‍♀️😯',
+                '80-89': '🔥🏃‍♀️👉 SÉRIO ISSO?!! 👈🏃‍♀️🔥',
             };
             const frases = sexo === 'F' ? { ...frasesHomem, ...frasesMulher } : frasesHomem;
 
@@ -141,12 +141,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // paletas
             // usar cores do commit para repetir entre 40–89
-            const pale = sexo === 'F' ? 'rgb(255, 232, 243)' : 'rgb(188, 224, 250)'; // commit: #ffe8f3 / #bce0fa
-            const strong = sexo === 'F' ? 'rgb(255, 79, 134)' : 'rgb(9, 108, 213)'; // commit: #ff4f86 / #096cd5
+            const pale = sexo === 'F' ? 'rgb(255, 232, 243)' : 'rgb(236, 247, 255)'; // commit: #ffe8f3 / #bce0fa
+            const strong = sexo === 'F' ? 'rgb(255, 79, 134)' : 'rgb(82, 206, 255)'; // commit: #ff4f86 / #096cd5
+            const strongM80 = 'rgb(133, 230, 254)';
+            // const strongM80 = 'rgb(82, 206, 255)';
             const black90Start = 'rgb(40, 40, 40)'; // nota 90 bgStart (invertido)
             const black90End = 'rgb(65, 65, 65)'; // nota 90 bgEnd (invertido)
             const black = 'rgb(0, 0, 0)'; // nota 99 (preto total)
             const gold = 'rgb(255, 209, 102)'; // nota 100
+            const goldM80 = 'rgb(255, 194, 51)'; // nota 100
+
 
             let bgStart, bgEnd;
             if (inteiro === 100) {
@@ -159,14 +163,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     // 40–79: pale -> strong (commit mapeado), t = (n-40)/40
                     const t = Math.max(0, Math.min(1, (inteiro - 40) / 40)); // 0..1 (40->80)
                     bgStart = interpRgb(pale, strong, t);
-                    bgEnd = interpRgb(pale, strong, Math.max(0, t * 0.6));
+                    bgEnd = interpRgb(pale, strong, Math.max(0, t * 0.2));
                 } else {
-                    // 80–89: strong -> gold
-                    // Tornar 80 ligeiramente mais claro (base 0.15) e manter 89 igual (alvo ~0.7)
-                    // t2'(80)=0.15 e t2'(89)=0.7  => t2' = 0.15 + (n-80)*(0.55/9)
-                    const t2 = Math.max(0, Math.min(1, 0.15 + (inteiro - 80) * (0.55 / 9))); // clamp 0..1
-                    bgStart = interpRgb(strong, gold, Math.min(1, t2 * 0.6));
-                    bgEnd = interpRgb(strong, gold, Math.min(1, t2));
+                    // 80–89: deslocar a cor de 85 para ocorrer em 80 e manter 89 igual
+                    // t2(80) = (85-80)/9 = 5/9, t2(89) = 1  => t2 = 5/9 + (n-80)*(4/81)
+                    const t2 = Math.max(0, Math.min(1, (5 / 9) + (inteiro - 80) * (4 / 81)));
+                    bgStart = interpRgb(sexo === 'F' ? strong : strongM80, sexo === 'F' ? gold : goldM80, Math.min(1, t2 * 0.2));
+                    bgEnd = interpRgb(sexo === 'F' ? strong : strongM80, sexo === 'F' ? gold : goldM80, t2);
                 }
             }
             else {
@@ -183,14 +186,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // cor do texto — fixa por sexo para < 90 (sem variação por luminância)
             let textColor;
-            if (inteiro < 90) {
-                textColor = sexo === 'F' ? 'rgb(70, 0, 125)' : 'rgb(0, 46, 119)';
-            } else if (inteiro < 100) {
+            if (inteiro === 100) {
+                textColor = sexo === 'F' ? '#2c0045ff' : '#002157ff';
+            }
+            else if (inteiro < 90) {
+                textColor = sexo === 'F' ? 'rgb(54, 0, 96)' : 'rgb(0, 37, 96)';
+            } else {
                 // 90–99: manter cores claras atuais por sexo
                 textColor = sexo === 'F' ? 'rgb(230, 180, 204)' : 'rgb(156, 202, 221)';
-            } else {
-                // demais: manter base fixa
-                textColor = sexo === 'F' ? 'rgb(61, 0, 96)' : 'rgb(0, 46, 119)';
             }
 
             const zone = zonaLabel(inteiro);
@@ -527,7 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Preenche tabela estática ---
     const tbody = document.getElementById("temposRefOrigTbody");
     if (!tbody) return;
-    
+
     tbody.innerHTML = '';
 
     for (const [distancia, dados] of Object.entries(metasTop)) {
