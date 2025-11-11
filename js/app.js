@@ -140,8 +140,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // paletas
-            const pale = sexo === 'F' ? 'rgb(255, 232, 243)' : 'rgb(151, 195, 242)'; // nota 50
-            const strong = sexo === 'F' ? 'rgb(255, 79, 134)' : 'rgb(9, 108, 213)'; // nota 80
+            // usar cores do commit para repetir entre 40–89
+            const pale = sexo === 'F' ? 'rgb(255, 232, 243)' : 'rgb(188, 224, 250)'; // commit: #ffe8f3 / #bce0fa
+            const strong = sexo === 'F' ? 'rgb(255, 79, 134)' : 'rgb(9, 108, 213)'; // commit: #ff4f86 / #096cd5
             const black90Start = 'rgb(40, 40, 40)'; // nota 90 bgStart (invertido)
             const black90End = 'rgb(65, 65, 65)'; // nota 90 bgEnd (invertido)
             const black = 'rgb(0, 0, 0)'; // nota 99 (preto total)
@@ -152,68 +153,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 bgStart = gold;
                 bgEnd = gold;
             }
-            else if (inteiro >= 90) {
+            else if (inteiro < 90) {
+                // Ajuste: o visual da nota 83 passa a ocorrer em 80, mantendo a variação final de 89
+                if (inteiro < 80) {
+                    // 40–79: pale -> strong (commit mapeado), t = (n-40)/40
+                    const t = Math.max(0, Math.min(1, (inteiro - 40) / 40)); // 0..1 (40->80)
+                    bgStart = interpRgb(pale, strong, t);
+                    bgEnd = interpRgb(pale, strong, Math.max(0, t * 0.6));
+                } else {
+                    // 80–89: strong -> gold
+                    // Tornar 80 ligeiramente mais claro (base 0.15) e manter 89 igual (alvo ~0.7)
+                    // t2'(80)=0.15 e t2'(89)=0.7  => t2' = 0.15 + (n-80)*(0.55/9)
+                    const t2 = Math.max(0, Math.min(1, 0.15 + (inteiro - 80) * (0.55 / 9))); // clamp 0..1
+                    bgStart = interpRgb(strong, gold, Math.min(1, t2 * 0.6));
+                    bgEnd = interpRgb(strong, gold, Math.min(1, t2));
+                }
+            }
+            else {
+                // >= 90: manter lógica atual de pretos e ouro
                 if (inteiro < 95) {
-                    // 90-95: transição do gradiente da nota 90 para preto total
                     const t = (inteiro - 90) / 5; // 0..1 (90->95)
                     bgStart = interpRgb(black90Start, black, t);
                     bgEnd = interpRgb(black90End, black, t);
-                } else {
-                    // 95-99: preto total
+                } else if (inteiro < 100) {
                     bgStart = black;
                     bgEnd = black;
                 }
             }
-            else if (inteiro >= 80) {
-                // 80-89: transição de strong para preto claro (nota 90)
-                const t = (inteiro - 80) / 10; // 0..1
-                bgStart = interpRgb(strong, black90End, Math.min(1, t * 0.6));
-                bgEnd = interpRgb(strong, black90End, Math.min(1, t));
-            } else {
-                // 50-79: transição de pale para strong
-                const t = Math.max(0, (inteiro - 50) / 30); // 50->80
-                bgStart = interpRgb(pale, strong, Math.max(0, t * 0.6));
-                bgEnd = interpRgb(pale, strong, t);
-            }
 
-            // cor do texto — padrão: branco/preto conforme luminance do fundo
+            // cor do texto — fixa por sexo para < 90 (sem variação por luminância)
             let textColor;
-            
-            // Para notas 90-99, usar cores claras específicas por sexo
-            if (inteiro >= 90 && inteiro < 100) {
-                textColor = sexo === 'F' ? 'rgb(230, 180, 204)' : 'rgb(156, 202, 221)'; // rosa claro para mulheres, azul claro para homens
-            } else if (sexo === 'F') {
-                // base desejada para mulheres
-                const base = 'rgb(61, 0, 96)';
-                const lumBg = luminanceRgb(bgEnd);
-                // se fundo muito escuro -> clarear a base aproximando de branco
-                if (lumBg < 0.35) {
-                    const mix = Math.min(0.9, 0.25 + (0.35 - lumBg)); // 0.25..~0.9
-                    textColor = interpRgb(base, 'rgb(255, 255, 255)', mix);
-                } else if (lumBg > 0.75) {
-                    // se fundo muito claro -> escurecer a base aproximando de preto
-                    const mix = Math.min(0.9, 0.25 + (lumBg - 0.75));
-                    textColor = interpRgb(base, 'rgb(0, 0, 0)', mix);
-                } else {
-                    // fundo médio -> usar a base diretamente
-                    textColor = base;
-                }
+            if (inteiro < 90) {
+                textColor = sexo === 'F' ? 'rgb(70, 0, 125)' : 'rgb(0, 46, 119)';
+            } else if (inteiro < 100) {
+                // 90–99: manter cores claras atuais por sexo
+                textColor = sexo === 'F' ? 'rgb(230, 180, 204)' : 'rgb(156, 202, 221)';
             } else {
-                // masculino / neutro: variação em torno de rgb(0, 60, 89)
-                const baseM = 'rgb(0, 46, 119)';
-                const lumBgM = luminanceRgb(bgEnd);
-                if (lumBgM < 0.30) {
-                    // fundo muito escuro -> clarear o baseM em direção ao branco
-                    const mix = Math.min(0.9, 0.35 + (0.30 - lumBgM)); // 0.35..~0.9
-                    textColor = interpRgb(baseM, 'rgb(255, 255, 255)', mix);
-                } else if (lumBgM > 0.78) {
-                    // fundo muito claro -> escurecer o baseM em direção ao preto
-                    const mix = Math.min(0.9, 0.25 + (lumBgM - 0.78));
-                    textColor = interpRgb(baseM, 'rgb(0, 0, 0)', mix);
-                } else {
-                    // fundo médio -> usar a base diretamente
-                    textColor = baseM;
-                }
+                // demais: manter base fixa
+                textColor = sexo === 'F' ? 'rgb(61, 0, 96)' : 'rgb(0, 46, 119)';
             }
 
             const zone = zonaLabel(inteiro);
