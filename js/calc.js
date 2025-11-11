@@ -73,8 +73,8 @@ window.distanciasBase = distanciasBase; // Expor para index.html
 // ];
 
 const fatorIdadeMascMesclado = [
-    { teto: 25, fator: 0.9 }, //CASNAV
-    { teto: 33, fator: 0.915 }, //CASNAV
+    { teto: 25, fator: 0.915 }, //CASNAV
+    { teto: 33, fator: 0.925 }, //CASNAV
     { teto: 39, fator: 0.931 }, //Marujo
     { teto: 45, fator: 1.000 }, //Marujo
     { teto: 49, fator: 1.088 }, //Naval
@@ -83,8 +83,8 @@ const fatorIdadeMascMesclado = [
 ];
 
 const fatorIdadeFemMesclado = [
-    { teto: 25, fator: 0.9 }, //CASNAV
-    { teto: 33, fator: 0.915 }, //CASNAV
+    { teto: 25, fator: 0.915 }, //CASNAV
+    { teto: 33, fator: 0.925 }, //CASNAV
     { teto: 39, fator: 0.927 }, //Naval
     { teto: 45, fator: 1.000 }, //Marujo
     { teto: 49, fator: 1.059 }, //Marujo

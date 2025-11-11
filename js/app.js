@@ -108,11 +108,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 '70-79': '🏃‍♂️👏 QUE TREINO TOP!! 👏🏃‍♂️',
                 '80-89': '🔥🏃‍♂️👉 SÉRIO ISSO?!! 👈🏃‍♂️🔥',
                 '90-99': '😱🏅⚡ DANGER ZONE ⚡🏅😱',
-                '100': '🏆🥇⚓ LENDÁRIA ⚓🥇🏆'
+                '100': '🏆🥇⚓ LENDÁRIO ⚓🥇🏆'
             };
             const frasesMulher = {
                 '70-79': '🏃‍♀️👏 QUE TREINO TOP!! 👏🏃‍♀️',
                 '80-89': '🔥🏃‍♀️👉 SÉRIO ISSO?!! 👈🏃‍♀️🔥',
+                '100': '🏆🥇⚓ LENDÁRIA ⚓🥇🏆'
             };
             const frases = sexo === 'F' ? { ...frasesHomem, ...frasesMulher } : frasesHomem;
 
