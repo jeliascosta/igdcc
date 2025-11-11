@@ -116,78 +116,100 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             const frases = sexo === 'F' ? { ...frasesHomem, ...frasesMulher } : frasesHomem;
 
-            // utilitários de cor (hex)
-            function hexToRgb(hex) {
-                const h = hex.replace('#', '');
-                const bigint = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
-                return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+            // utilitários de cor (RGB)
+            function rgbStringToArray(rgb) {
+                // Aceita tanto "rgb(r,g,b)" quanto array [r,g,b]
+                if (Array.isArray(rgb)) return rgb;
+                const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                return match ? [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])] : [0, 0, 0];
             }
-            function rgbToHex([r, g, b]) { return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join(''); }
-            function interpHex(a, b, t) {
-                const ra = hexToRgb(a), rb = hexToRgb(b);
+            function rgbArrayToString([r, g, b]) {
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+            function interpRgb(a, b, t) {
+                const ra = rgbStringToArray(a), rb = rgbStringToArray(b);
                 const r = Math.round(ra[0] + (rb[0] - ra[0]) * t);
                 const g = Math.round(ra[1] + (rb[1] - ra[1]) * t);
                 const bl = Math.round(ra[2] + (rb[2] - ra[2]) * t);
-                return rgbToHex([r, g, bl]);
+                return rgbArrayToString([r, g, bl]);
+            }
+            // Função auxiliar para calcular luminance de RGB
+            function luminanceRgb(rgb) {
+                const [r, g, b] = rgbStringToArray(rgb);
+                return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
             }
 
             // paletas
-            const pale = sexo === 'F' ? '#ffe8f3' : '#bce0faff'; // nota 50
-            const strong = sexo === 'F' ? '#ff4f86' : '#096cd5ff'; // nota 90 start
-            const gold = '#ffd166'; // final gold
+            const pale = sexo === 'F' ? 'rgb(255, 232, 243)' : 'rgb(151, 195, 242)'; // nota 50
+            const strong = sexo === 'F' ? 'rgb(255, 79, 134)' : 'rgb(9, 108, 213)'; // nota 80
+            const black90Start = 'rgb(40, 40, 40)'; // nota 90 bgStart (invertido)
+            const black90End = 'rgb(65, 65, 65)'; // nota 90 bgEnd (invertido)
+            const black = 'rgb(0, 0, 0)'; // nota 99 (preto total)
+            const gold = 'rgb(255, 209, 102)'; // nota 100
 
             let bgStart, bgEnd;
             if (inteiro === 100) {
                 bgStart = gold;
                 bgEnd = gold;
             }
-            else if (inteiro < 90) {
-                const t = Math.max(0, (inteiro - 50) / 40); // 50->90
-                bgStart = interpHex(pale, strong, Math.max(0, t * 0.6));
-                bgEnd = interpHex(pale, strong, t);
-            } else {
-                const t2 = (inteiro - 90) / 10; // 0..1
-                // transição do strong para gold
-                bgStart = interpHex(strong, gold, Math.min(1, t2 * 0.6));
-                bgEnd = interpHex(strong, gold, Math.min(1, t2));
+            else if (inteiro >= 90) {
+                if (inteiro < 95) {
+                    // 90-95: transição do gradiente da nota 90 para preto total
+                    const t = (inteiro - 90) / 5; // 0..1 (90->95)
+                    bgStart = interpRgb(black90Start, black, t);
+                    bgEnd = interpRgb(black90End, black, t);
+                } else {
+                    // 95-99: preto total
+                    bgStart = black;
+                    bgEnd = black;
+                }
             }
-
-            // legibilidade: calcula luminance
-            function luminance(hex) {
-                const [r, g, b] = hexToRgb(hex);
-                return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            else if (inteiro >= 80) {
+                // 80-89: transição de strong para preto claro (nota 90)
+                const t = (inteiro - 80) / 10; // 0..1
+                bgStart = interpRgb(strong, black90End, Math.min(1, t * 0.6));
+                bgEnd = interpRgb(strong, black90End, Math.min(1, t));
+            } else {
+                // 50-79: transição de pale para strong
+                const t = Math.max(0, (inteiro - 50) / 30); // 50->80
+                bgStart = interpRgb(pale, strong, Math.max(0, t * 0.6));
+                bgEnd = interpRgb(pale, strong, t);
             }
 
             // cor do texto — padrão: branco/preto conforme luminance do fundo
             let textColor;
-            if (sexo === 'F') {
+            
+            // Para notas 90-99, usar cores claras específicas por sexo
+            if (inteiro >= 90 && inteiro < 100) {
+                textColor = sexo === 'F' ? 'rgb(230, 180, 204)' : 'rgb(156, 202, 221)'; // rosa claro para mulheres, azul claro para homens
+            } else if (sexo === 'F') {
                 // base desejada para mulheres
-                const base = '#3d0060';
-                const lumBg = luminance(bgEnd);
+                const base = 'rgb(61, 0, 96)';
+                const lumBg = luminanceRgb(bgEnd);
                 // se fundo muito escuro -> clarear a base aproximando de branco
                 if (lumBg < 0.35) {
                     const mix = Math.min(0.9, 0.25 + (0.35 - lumBg)); // 0.25..~0.9
-                    textColor = interpHex(base, '#ffffff', mix);
+                    textColor = interpRgb(base, 'rgb(255, 255, 255)', mix);
                 } else if (lumBg > 0.75) {
                     // se fundo muito claro -> escurecer a base aproximando de preto
                     const mix = Math.min(0.9, 0.25 + (lumBg - 0.75));
-                    textColor = interpHex(base, '#000000', mix);
+                    textColor = interpRgb(base, 'rgb(0, 0, 0)', mix);
                 } else {
                     // fundo médio -> usar a base diretamente
                     textColor = base;
                 }
             } else {
-                // masculino / neutro: variação em torno de #003c59
-                const baseM = '#002e77';
-                const lumBgM = luminance(bgEnd);
+                // masculino / neutro: variação em torno de rgb(0, 60, 89)
+                const baseM = 'rgb(0, 46, 119)';
+                const lumBgM = luminanceRgb(bgEnd);
                 if (lumBgM < 0.30) {
                     // fundo muito escuro -> clarear o baseM em direção ao branco
                     const mix = Math.min(0.9, 0.35 + (0.30 - lumBgM)); // 0.35..~0.9
-                    textColor = interpHex(baseM, '#ffffff', mix);
+                    textColor = interpRgb(baseM, 'rgb(255, 255, 255)', mix);
                 } else if (lumBgM > 0.78) {
                     // fundo muito claro -> escurecer o baseM em direção ao preto
                     const mix = Math.min(0.9, 0.25 + (lumBgM - 0.78));
-                    textColor = interpHex(baseM, '#000000', mix);
+                    textColor = interpRgb(baseM, 'rgb(0, 0, 0)', mix);
                 } else {
                     // fundo médio -> usar a base diretamente
                     textColor = baseM;
@@ -239,7 +261,14 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('zoneSmall').textContent = zone;
             document.getElementById('cardTempo').textContent = displayTempo;
             document.getElementById('cardPace').textContent = `${displayPace} /km`;
-            document.getElementById('zonePhrase').textContent = phrase;
+            const zonePhraseEl = document.getElementById('zonePhrase');
+            zonePhraseEl.textContent = phrase;
+            // Aplicar cor rgb(254, 240, 165) quando a nota estiver entre 90 e 99
+            if (inteiro >= 90 && inteiro < 100) {
+                zonePhraseEl.style.color = 'rgba(242, 244, 164, 1)';
+            } else {
+                zonePhraseEl.style.color = ''; // resetar para cor padrão
+            }
             // Exibe o botão copiar se o card existir
             const copyBtn = document.getElementById('copyCardBtn');
             const shareCard = document.getElementById('shareCard');
@@ -347,7 +376,7 @@ function gerarGraficos() {
                     {
                         label: 'Homens',
                         data: dadosM,
-                        borderColor: '#1976d2',
+                        borderColor: 'rgb(25, 118, 210)',
                         backgroundColor: 'rgba(25,118,210,0.08)',
                         spanGaps: true,
                         tension: 0.25,
@@ -357,7 +386,7 @@ function gerarGraficos() {
                     {
                         label: 'Mulheres',
                         data: dadosF,
-                        borderColor: '#d81b60',
+                        borderColor: 'rgb(216, 27, 96)',
                         backgroundColor: 'rgba(216,27,96,0.08)',
                         spanGaps: true,
                         tension: 0.25,
@@ -534,7 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (dados.M) {
             const { idade, tempo } = dados.M;
             const tr = document.createElement('tr');
-            tr.style.background = '#e8f0ff';
+            tr.style.background = 'rgb(232, 240, 255)';
             tr.innerHTML = `
                 <td>${distancia}</td>
                 <td>M</td>
@@ -548,7 +577,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (dados.F) {
             const { idade, tempo } = dados.F;
             const tr = document.createElement('tr');
-            tr.style.background = '#ffe8f0';
+            tr.style.background = 'rgb(255, 232, 240)';
             tr.innerHTML = `
                 <td>${distancia}</td>
                 <td>F</td>
