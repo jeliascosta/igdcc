@@ -688,7 +688,18 @@ function setupCompositor() {
             const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
             const link = document.createElement('a');
             link.href = dataUrl;
-            link.download = 'igdcc-share.jpg';
+            // Monta nome do arquivo usando o texto de scoreDistancia (sem espaços)
+            const distEl = document.getElementById('scoreDistancia');
+            let distStr = (distEl && distEl.textContent) ? distEl.textContent.trim() : '';
+            distStr = distStr.replace(/\s+/g, '');
+            const notaEl = document.getElementById('scoreBig');
+            let notaStr = (notaEl && notaEl.textContent) ? notaEl.textContent.trim() : '';
+            notaStr = notaStr.replace(/\s+/g, '');
+            const now = new Date();
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yy = String(now.getFullYear()).slice(-2);
+            link.download = `igdcc-${notaStr}-${distStr}_${dd}-${mm}-${yy}.jpg`;
             document.body.appendChild(link);
             link.click();
             link.remove();
