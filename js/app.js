@@ -804,7 +804,7 @@ function setupCompositor() {
                 window.open(dataUrl, '_blank');
             } catch (e) {
                 console.error('Falha ao compartilhar:', e);
-                alert('Compartilhamento não suportado neste dispositivo/navegador.');
+                // alert('Compartilhamento não suportado neste dispositivo/navegador.');
             }
         });
     }
