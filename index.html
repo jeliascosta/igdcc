@@ -257,70 +257,7 @@
     <!-- Biblioteca para capturar o div como imagem -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-    <script>
-        const CARD_EXPORT_SCALE = 3;
-        const CARD_EXPORT_MIME = 'image/png';
-        const CARD_EXPORT_QUALITY = 0.92; // ignorado por alguns navegadores para PNG, mantido por consistência
-
-        document.getElementById('copyCardBtn').addEventListener('click', async () => {
-            const card = document.getElementById('shareCard');
-            if (!card || card.style.display === 'none') {
-                alert('Nenhum card gerado ainda!');
-                return;
-            }
-
-            try {
-                // Captura o div como imagem
-                const canvas = await html2canvas(card, {
-                    backgroundColor: null,
-                    scale: CARD_EXPORT_SCALE,
-                    useCORS: true
-                });
-
-                // Monta nome do arquivo
-                const distEl = document.getElementById('scoreDistancia');
-                let distStr = (distEl && distEl.textContent) ? distEl.textContent.trim() : '';
-                distStr = distStr.replace(/\s+/g, '');
-                const notaEl = document.getElementById('scoreBig');
-                let notaStr = (notaEl && notaEl.textContent) ? notaEl.textContent.trim() : '';
-                notaStr = notaStr.replace(/\s+/g, '');
-                const now = new Date();
-                const dd = String(now.getDate()).padStart(2, '0');
-                const mm = String(now.getMonth() + 1).padStart(2, '0');
-                const yy = String(now.getFullYear()).slice(-2);
-                const filename = `igdcc-${notaStr}-${distStr}_${dd}-${mm}-${yy}.png`;
-
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, CARD_EXPORT_MIME, CARD_EXPORT_QUALITY));
-                if (!blob) throw new Error('Falha ao gerar imagem');
-                const file = new File([blob], filename, { type: CARD_EXPORT_MIME });
-
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'IGDCC',
-                        text: 'Meu card do IGDCC'
-                    });
-                    return;
-                }
-                if (navigator.share) {
-                    const dataUrl = canvas.toDataURL(CARD_EXPORT_MIME, CARD_EXPORT_QUALITY);
-                    await navigator.share({
-                        title: 'IGDCC',
-                        text: 'Meu card do IGDCC',
-                        url: dataUrl
-                    });
-                    return;
-                }
-
-                // Fallback: abrir imagem em nova aba para o usuário compartilhar manualmente
-                const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
-            } catch (err) {
-                console.error('Falha ao compartilhar/capturar card:', err);
-                // alert('Compartilhamento não suportado neste dispositivo/navegador.');
-            }
-        });
-    </script>
+    
 
     <script src="js/app.js"></script>
 </body>

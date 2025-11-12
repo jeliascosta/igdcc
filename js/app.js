@@ -45,31 +45,72 @@ function preencherTabelaReferencia() {
 }
 
 // Função helper para obter distância formatada para 1 casa decimal (usada nos cálculos)
-function getDistanciaFormatada() {
+function obterDistanciaFormatada() {
     const valor = parseFloat(document.getElementById('distancia').value);
     return !isNaN(valor) ? parseFloat(valor.toFixed(1)) : valor;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     // Controle de exibição dos campos de entrada
-    const radioButtons = document.querySelectorAll('input[name="tipoEntrada"]');
-    const tempoInput = document.getElementById('tempoInput');
-    const paceInput = document.getElementById('paceInput');
+    const botoesRadio = document.querySelectorAll('input[name="tipoEntrada"]');
+    const entradaTempo = document.getElementById('tempoInput');
+    const entradaPace = document.getElementById('paceInput');
 
-    radioButtons.forEach(radio => {
+    botoesRadio.forEach(radio => {
         radio.addEventListener('change', function () {
             if (this.value === 'tempo') {
-                tempoInput.style.display = 'block';
-                paceInput.style.display = 'none';
+                entradaTempo.style.display = 'block';
+                entradaPace.style.display = 'none';
                 document.getElementById('tempo').required = true;
                 document.getElementById('pace').required = false;
             } else {
-                tempoInput.style.display = 'none';
-                paceInput.style.display = 'block';
+                entradaTempo.style.display = 'none';
+                entradaPace.style.display = 'block';
                 document.getElementById('tempo').required = false;
                 document.getElementById('pace').required = true;
             }
         });
+    });
+
+    // Handler para copiar/baixar somente o card (movido do index.html)
+    const btn = document.getElementById('copyCardBtn');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+        const card = document.getElementById('shareCard');
+        if (!card || card.style.display === 'none') {
+            alert('Nenhum card gerado ainda!');
+            return;
+        }
+        try {
+            const CARD_EXPORT_SCALE = 3;
+            const canvas = await html2canvas(card, { backgroundColor: null, scale: CARD_EXPORT_SCALE, useCORS: true });
+            const filename = montarNomeArquivo();
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1));
+
+            if (blob) {
+                const file = new File([blob], filename, { type: 'image/png' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'IGDCC', text: 'Meu card do IGDCC' });
+                    return;
+                }
+            }
+            if (navigator.share) {
+                const dataUrl = canvas.toDataURL('image/png', 1);
+                await navigator.share({ title: 'IGDCC', text: 'Meu card do IGDCC', url: dataUrl });
+                return;
+            }
+            // Fallback: abrir em nova aba
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            } else {
+                const dataUrl = canvas.toDataURL('image/png', 1);
+                window.open(dataUrl, '_blank');
+            }
+        } catch (e) {
+            console.error('Falha ao exportar card:', e);
+            alert('Não foi possível gerar a imagem.');
+        }
     });
 
     // Manipulação do formulário
@@ -79,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const tipoEntrada = document.querySelector('input[name="tipoEntrada"]:checked').value;
         const idade = parseInt(document.getElementById('idade').value);
         const sexo = document.getElementById('sexo').value;
-        const distancia = getDistanciaFormatada();
+        const distancia = obterDistanciaFormatada();
 
         try {
             let nota;
@@ -94,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const inteiro = Math.max(0, Math.min(100, Math.floor(Number(nota) || 0)));
 
             // zona de exemplo: décadas, 90+ é "90-100"
-            function zonaLabel(n) {
+            function rotuloZona(n) {
                 if (n === 100) return '100';
                 if (n >= 90) return '90-99';
                 const low = Math.floor(n / 10) * 10;
@@ -134,21 +175,21 @@ document.addEventListener('DOMContentLoaded', function () {
             const frasesPrint = sexo === 'F' ? frasesMulherCardPrint : frasesHomemCardPrint;
 
             // utilitários de cor (RGB)
-            function rgbStringToArray(rgb) {
+            function rgbStringParaArray(rgb) {
                 // Aceita tanto "rgb(r,g,b)" quanto array [r,g,b]
                 if (Array.isArray(rgb)) return rgb;
                 const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
                 return match ? [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])] : [0, 0, 0];
             }
-            function rgbArrayToString([r, g, b]) {
+            function rgbArrayParaString([r, g, b]) {
                 return `rgb(${r}, ${g}, ${b})`;
             }
-            function interpRgb(a, b, t) {
-                const ra = rgbStringToArray(a), rb = rgbStringToArray(b);
+            function interpolarRgb(a, b, t) {
+                const ra = rgbStringParaArray(a), rb = rgbStringParaArray(b);
                 const r = Math.round(ra[0] + (rb[0] - ra[0]) * t);
                 const g = Math.round(ra[1] + (rb[1] - ra[1]) * t);
                 const bl = Math.round(ra[2] + (rb[2] - ra[2]) * t);
-                return rgbArrayToString([r, g, bl]);
+                return rgbArrayParaString([r, g, bl]);
             }
 
             // paletas
@@ -174,22 +215,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (inteiro < 80) {
                     // 40–79: pale -> strong (commit mapeado), t = (n-40)/40
                     const t = Math.max(0, Math.min(1, (inteiro - 40) / 40)); // 0..1 (40->80)
-                    bgStart = interpRgb(pale, strong, t);
-                    bgEnd = interpRgb(pale, strong, Math.max(0, t * 0.2));
+                    bgStart = interpolarRgb(pale, strong, t);
+                    bgEnd = interpolarRgb(pale, strong, Math.max(0, t * 0.2));
                 } else {
                     // 80–89: deslocar a cor de 85 para ocorrer em 80 e manter 89 igual
                     // t2(80) = (85-80)/9 = 5/9, t2(89) = 1  => t2 = 5/9 + (n-80)*(4/81)
                     const t2 = Math.max(0, Math.min(1, (5 / 9) + (inteiro - 80) * (4 / 81)));
-                    bgStart = interpRgb(sexo === 'F' ? strong : strongM80, sexo === 'F' ? gold : goldM80, Math.min(1, t2 * 0.2));
-                    bgEnd = interpRgb(sexo === 'F' ? strong : strongM80, sexo === 'F' ? gold : goldM80, t2);
+                    bgStart = interpolarRgb(sexo === 'F' ? strong : strongM80, sexo === 'F' ? gold : goldM80, Math.min(1, t2 * 0.2));
+                    bgEnd = interpolarRgb(sexo === 'F' ? strong : strongM80, sexo === 'F' ? gold : goldM80, t2);
                 }
             }
             else {
                 // >= 90: manter lógica atual de pretos e ouro
                 if (inteiro < 95) {
                     const t = (inteiro - 90) / 5; // 0..1 (90->95)
-                    bgStart = interpRgb(black90Start, black, t);
-                    bgEnd = interpRgb(black90End, black, t);
+                    bgStart = interpolarRgb(black90Start, black, t);
+                    bgEnd = interpolarRgb(black90End, black, t);
                 } else if (inteiro < 100) {
                     bgStart = black;
                     bgEnd = black;
@@ -208,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 textColor = sexo === 'F' ? 'rgb(230, 180, 204)' : 'rgb(156, 202, 221)';
             }
 
-            const zone = zonaLabel(inteiro);
+            const zone = rotuloZona(inteiro);
             const phrase = frases[zone] || (inteiro >= 90 ? frases['90-100'] : '💪 BORA VIBRAR! 💪');
             const printPhrase = (frasesPrint && frasesPrint[zone]) ? frasesPrint[zone] : phrase;
 
@@ -247,12 +288,12 @@ document.addEventListener('DOMContentLoaded', function () {
             shareCardEl.style.background = `linear-gradient(180deg, ${bgStart}, ${bgEnd})`;
             shareCardEl.style.color = textColor;
             shareCardEl.style.display = 'block';
-            // Persistir dados para o clone usar a mesma frase de print que você definiu
-            try {
+            // Persistir dados para o clone usar a mesma frase de print
+            if (shareCardEl && shareCardEl.dataset) {
                 shareCardEl.dataset.zoneKey = zone;
                 shareCardEl.dataset.sexo = sexo;
                 shareCardEl.dataset.phrasePrint = printPhrase;
-            } catch (_) { }
+            }
 
             document.getElementById('cardDate').textContent = hoje;
             document.getElementById('scoreBig').textContent = inteiro;
@@ -278,15 +319,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 copyBtn.style.display = 'none';
             }
             // Exibe a seção do compositor apenas após calcular a nota
-            try {
-                const compositor = document.getElementById('compositor');
-                if (compositor) compositor.style.display = 'block';
-            } catch (_) { }
+            const compositor = document.getElementById('compositor');
+            if (compositor) compositor.style.display = 'block';
             // Sincroniza o card no compositor com o novo conteúdo e largura
-            try {
-                if (typeof updateOverlayCardFromShareCard === 'function') updateOverlayCardFromShareCard();
-                if (typeof recalibrateOverlayWidthFromSource === 'function') recalibrateOverlayWidthFromSource();
-            } catch (_) { }
+            if (typeof atualizarCardOverlayDoShareCard === 'function') atualizarCardOverlayDoShareCard();
+            if (typeof recalibrarLarguraOverlayDaOrigem === 'function') recalibrarLarguraOverlayDaOrigem();
         } catch (error) {
             const shareCard = document.getElementById('shareCard');
             if (shareCard) {
@@ -323,6 +360,20 @@ function segundosParaMMSS(sec) {
         const s = total % 60;
         return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
+}
+
+function montarNomeArquivo() {
+    const distEl = document.getElementById('scoreDistancia');
+    let distStr = (distEl && distEl.textContent) ? distEl.textContent.trim() : '';
+    distStr = distStr.replace(/\s+/g, '');
+    const notaEl = document.getElementById('scoreBig');
+    let notaStr = (notaEl && notaEl.textContent) ? notaEl.textContent.trim() : '';
+    notaStr = notaStr.replace(/\s+/g, '');
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yy = String(now.getFullYear()).slice(-2);
+    return `igdcc-${notaStr}-${distStr}_${dd}-${mm}-${yy}.png`;
 }
 
 // Gera dados (array de {x: tempoSegundos, y: nota}) para uma distância e sexo
@@ -367,24 +418,24 @@ function gerarGraficos() {
     window._charts = window._charts || {};
 
     for (const d of distancias) {
-        const ctx = document.getElementById(d.id);
-        if (!ctx) continue;
+        const canvasEl = document.getElementById(d.id);
+        if (!canvasEl) continue;
 
         if (window._charts[d.id]) {
             try { window._charts[d.id].destroy(); } catch (e) { }
         }
 
-        const dadosM = gerarDadosParaDistancia(notas, idade, 'M', d.km);
-        const dadosF = gerarDadosParaDistancia(notas, idade, 'F', d.km);
+        const dadosHomens = gerarDadosParaDistancia(notas, idade, 'M', d.km);
+        const dadosMulheres = gerarDadosParaDistancia(notas, idade, 'F', d.km);
 
-        const cfg = {
+        const config = {
             type: 'line',
             data: {
                 // labels não são mais usados para a série; cada ponto tem x (tempo) e y (nota)
                 datasets: [
                     {
                         label: 'Homens',
-                        data: dadosM,
+                        data: dadosHomens,
                         borderColor: 'rgb(25, 118, 210)',
                         backgroundColor: 'rgba(25,118,210,0.08)',
                         spanGaps: true,
@@ -394,7 +445,7 @@ function gerarGraficos() {
                     },
                     {
                         label: 'Mulheres',
-                        data: dadosF,
+                        data: dadosMulheres,
                         borderColor: 'rgb(216, 27, 96)',
                         backgroundColor: 'rgba(216,27,96,0.08)',
                         spanGaps: true,
@@ -446,11 +497,11 @@ function gerarGraficos() {
             }
         };
 
-        const wrap = ctx.parentElement;
-        if (wrap) wrap.style.minHeight = '220px';
+        const containerEl = canvasEl.parentElement;
+        if (containerEl) containerEl.style.minHeight = '220px';
 
         try {
-            window._charts[d.id] = new Chart(ctx.getContext('2d'), cfg);
+            window._charts[d.id] = new Chart(canvasEl.getContext('2d'), config);
         } catch (e) {
             console.error('Erro ao criar gráfico', d.id, e);
         }
@@ -463,26 +514,36 @@ function atualizarTituloGraficos() {
     tituloGraficos.textContent = `Gráficos: Nota vs Tempo (${idade} anos)`;
 }
 
+function onFormInputsChange() {
+    atualizarTituloGraficos();
+    atualizarTituloReferencia();
+    atualizarTabelaNotas();
+    try { gerarGraficos(); } catch (e) { }
+}
+
 // Chamar gerarGraficos() após carregar página e quando idade mudar
 document.addEventListener('DOMContentLoaded', function () {
-    try { gerarGraficos(); } catch (e) { }
+    onFormInputsChange();
     const idadeInput = document.getElementById('idade');
-    if (idadeInput) idadeInput.addEventListener('change', () => { try { gerarGraficos(); } catch (e) { } });
+    if (idadeInput) {
+        idadeInput.addEventListener('change', onFormInputsChange);
+        idadeInput.addEventListener('input', onFormInputsChange);
+    }
     // Inicializa compositor após DOM pronto
-    try { setupCompositor(); } catch (e) { console.warn('Compositor não inicializado:', e); }
+    try { configurarCompositor(); } catch (e) { console.warn('Compositor não inicializado:', e); }
 });
 
 // Adicione estes event listeners
-inputIdade.addEventListener('change', atualizarTituloGraficos);
-inputIdade.addEventListener('input', atualizarTituloGraficos);
+inputIdade.addEventListener('change', onFormInputsChange);
+inputIdade.addEventListener('input', onFormInputsChange);
 
 // Chamar a função uma vez para definir o título inicial
-atualizarTituloGraficos();
+onFormInputsChange();
 
 function atualizarTabelaNotas() {
     const idade = parseInt(document.getElementById('idade').value);
     const sexo = document.getElementById('sexo').value;
-    const distancia = getDistanciaFormatada();
+    const distancia = obterDistanciaFormatada();
     const tabelaNotas = document.getElementById('tabelaNotas');
     const idadeRef = document.getElementById('idade-ref');
 
@@ -507,12 +568,12 @@ function atualizarTabelaNotas() {
 }
 
 // Adicionar event listeners para atualizar a tabela
-document.getElementById('idade').addEventListener('change', atualizarTabelaNotas);
-document.getElementById('sexo').addEventListener('change', atualizarTabelaNotas);
-document.getElementById('distancia').addEventListener('change', atualizarTabelaNotas);
+document.getElementById('idade').addEventListener('change', onFormInputsChange);
+document.getElementById('sexo').addEventListener('change', onFormInputsChange);
+document.getElementById('distancia').addEventListener('change', onFormInputsChange);
 
 // Inicializar a tabela
-document.addEventListener('DOMContentLoaded', atualizarTabelaNotas);
+document.addEventListener('DOMContentLoaded', onFormInputsChange);
 
 function atualizarTituloReferencia() {
     const idade = document.getElementById('idade').value;
@@ -525,257 +586,265 @@ function atualizarTituloReferencia() {
 }
 
 // Adicionar event listeners
-document.getElementById('idade').addEventListener('change', atualizarTituloReferencia);
-document.getElementById('sexo').addEventListener('change', atualizarTituloReferencia);
-document.getElementById('distancia').addEventListener('change', atualizarTituloReferencia);
+document.getElementById('idade').addEventListener('change', onFormInputsChange);
+document.getElementById('sexo').addEventListener('change', onFormInputsChange);
+document.getElementById('distancia').addEventListener('change', onFormInputsChange);
 
 // Inicializar o título
-document.addEventListener('DOMContentLoaded', atualizarTituloReferencia);
+document.addEventListener('DOMContentLoaded', onFormInputsChange);
 
 // ============================
 // Compositor: upload + overlay
 // ============================
 let _compose = null;
 
-function setupCompositor() {
-    const input = document.getElementById('composeInput');
-    const img = document.getElementById('composeImg');
-    const overlay = document.getElementById('composeOverlay');
-    const exportBtn = document.getElementById('composeExport');
-    const shareBtn = document.getElementById('composeShare');
-    const wrap = document.getElementById('composeWrap');
-    const scaleInput = document.getElementById('composeScale');
-    const scaleLabel = document.getElementById('composeScaleLabel');
+function configurarCompositor() {
+    const entrada = document.getElementById('composeInput');
+    const imagem = document.getElementById('composeImg');
+    const sobreposicao = document.getElementById('composeOverlay');
+    const botaoExportar = document.getElementById('composeExport');
+    const botaoCompartilhar = document.getElementById('composeShare');
+    const container = document.getElementById('composeWrap');
+    const entradaEscala = document.getElementById('composeScale');
+    const rotuloEscala = document.getElementById('composeScaleLabel');
 
     // parâmetros reutilizáveis para exportar/compartilhar o PRINT (compositor)
-    const EXPORT_SCALE = 3;
+    let EXPORT_SCALE_PADRAO = 3;
+    const EXPORT_LARGURA_ALVO = 2000;
     const EXPORT_MIME = 'image/png';
-    const EXPORT_QUALITY = 1;
+    const EXPORT_QUALITY = 0.92;
 
-    if (!input || !img || !overlay || !exportBtn || !wrap) return;
+    if (!entrada || !imagem || !sobreposicao || !botaoExportar || !container) return;
     // manter overlay invisível até que a imagem esteja carregada
-    try { overlay.style.visibility = 'hidden'; } catch (_) { }
-    if (shareBtn) shareBtn.disabled = true;
+    try { sobreposicao.style.visibility = 'hidden'; } catch (_) { }
+    if (botaoCompartilhar) botaoCompartilhar.disabled = true;
 
     // cria contêiner interno sem padding/bordas para exportação
-    let exportRoot = wrap.querySelector('.compose-export-root');
-    if (!exportRoot) {
-        exportRoot = document.createElement('div');
-        exportRoot.className = 'compose-export-root';
-        exportRoot.style.position = 'relative';
-        exportRoot.style.display = 'inline-block';
-        exportRoot.style.padding = '0';
-        exportRoot.style.margin = '0';
-        exportRoot.style.border = 'none';
-        // mover img e overlay para dentro do exportRoot
-        if (img && img.parentElement === wrap) exportRoot.appendChild(img);
-        if (overlay && overlay.parentElement === wrap) exportRoot.appendChild(overlay);
-        wrap.appendChild(exportRoot);
+    function ensureExportRoot() {
+        let exportRoot = container.querySelector('.compose-export-root');
+        if (!exportRoot) {
+            exportRoot = document.createElement('div');
+            exportRoot.className = 'compose-export-root';
+            exportRoot.style.position = 'relative';
+            exportRoot.style.display = 'inline-block';
+            exportRoot.style.padding = '0';
+            exportRoot.style.margin = '0';
+            exportRoot.style.border = 'none';
+            // mover img e overlay para dentro do exportRoot
+            if (imagem && imagem.parentElement === container) exportRoot.appendChild(imagem);
+            if (sobreposicao && sobreposicao.parentElement === container) exportRoot.appendChild(sobreposicao);
+            container.appendChild(exportRoot);
+        }
+        return exportRoot;
     }
 
-    _compose = { input, img, overlay, exportBtn, wrap, exportRoot, scaleInput, scaleLabel, cardEl: null, dragging: false, dragOff: { x: 0, y: 0 }, baseWidth: null, frozenBaseWidth: null, scale: 100, metrics: null, isPinching: false, pinchStartDist: 0, pinchBaseScale: 100 };
+    function initState() {
+        const exportRoot = ensureExportRoot();
+        _compose = { input: entrada, img: imagem, overlay: sobreposicao, exportBtn: botaoExportar, wrap: container, exportRoot, scaleInput: entradaEscala, scaleLabel: rotuloEscala, cardEl: null, dragging: false, dragOff: { x: 0, y: 0 }, baseWidth: null, frozenBaseWidth: null, scale: 100, metrics: null, isPinching: false, pinchStartDist: 0, pinchBaseScale: 100 };
+    }
 
-    input.addEventListener('change', (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            // aguardar renderização da imagem antes de criar/atualizar o card clonado
-            img.onload = () => {
-                img.style.display = 'block';
-                exportBtn.disabled = false;
-                if (shareBtn) shareBtn.disabled = false;
-                // só agora o overlay pode ficar visível
-                try { overlay.style.visibility = 'visible'; } catch (_) { }
-                // exibe controles (escala e botões) somente após a imagem carregar
-                try {
-                    const scaleRow = document.getElementById('composeScaleRow');
-                    const actions = document.getElementById('composeActions');
-                    if (scaleRow) scaleRow.style.display = 'flex';
-                    if (actions) actions.style.display = 'flex';
-                } catch (_) { }
-                if (!_compose.cardEl) {
-                    ensureOverlayCard();
-                } else {
-                    applyOverlayWidthFromBase();
-                }
+    function initFileLoader() {
+        entrada.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                // aguardar renderização da imagem antes de criar/atualizar o card clonado
+                imagem.onload = () => {
+                    imagem.style.display = 'block';
+                    botaoExportar.disabled = false;
+                    if (botaoCompartilhar) botaoCompartilhar.disabled = false;
+                    // define escala de exportação com base na largura da imagem carregada
+                    const largura = imagem.naturalWidth || imagem.width || 0;
+                    EXPORT_SCALE_PADRAO = largura ? (EXPORT_LARGURA_ALVO / largura) : 3;
+                    console.log("largura", largura, "EXPORT SCALE", EXPORT_SCALE_PADRAO)
+                    // só agora o overlay pode ficar visível
+                    try { sobreposicao.style.visibility = 'visible'; } catch (_) { }
+                    // exibe controles (escala e botões) somente após a imagem carregar
+                    try {
+                        const scaleRow = document.getElementById('composeScaleRow');
+                        const actions = document.getElementById('composeActions');
+                        if (scaleRow) scaleRow.style.display = 'flex';
+                        if (actions) actions.style.display = 'flex';
+                    } catch (_) { }
+                    if (!_compose.cardEl) {
+                        garantirCardOverlay();
+                    } else {
+                        aplicarLarguraOverlayDaBase();
+                    }
+                };
+                imagem.src = reader.result;
             };
-            img.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-    });
+            reader.readAsDataURL(file);
+        });
+    }
 
-    // Slider para tamanho do card (preserva proporção)
-    if (scaleInput) {
-        const applyScale = (val) => {
-            _compose.scale = Number(val) || 100;
+    function initScaleControls() {
+        // Slider para tamanho do card (preserva proporção)
+        if (entradaEscala) {
+            const applyScale = (val) => {
+                _compose.scale = Number(val) || 100;
+                if (_compose.cardEl) {
+                    const s = (_compose.scale / 100);
+                    _compose.cardEl.style.transformOrigin = 'top left';
+                    _compose.cardEl.style.transform = `scale(${s})`;
+                }
+                if (rotuloEscala) rotuloEscala.textContent = `${_compose.scale}%`;
+            };
+            entradaEscala.addEventListener('input', (ev) => applyScale(ev.target.value));
+            // Label inicial + aplicar transform inicial
+            if (rotuloEscala) rotuloEscala.textContent = `${entradaEscala.value}%`;
+            // aplica no estado atual, se já houver card
             if (_compose.cardEl) {
-                const s = (_compose.scale / 100);
+                const s = (Number(entradaEscala.value || 100) / 100);
                 _compose.cardEl.style.transformOrigin = 'top left';
                 _compose.cardEl.style.transform = `scale(${s})`;
             }
-            if (scaleLabel) scaleLabel.textContent = `${_compose.scale}%`;
-        };
-        scaleInput.addEventListener('input', (ev) => applyScale(ev.target.value));
-        // Label inicial + aplicar transform inicial
-        if (scaleLabel) scaleLabel.textContent = `${scaleInput.value}%`;
-        // aplica no estado atual, se já houver card
-        if (_compose.cardEl) {
-            const s = (Number(scaleInput.value || 100) / 100);
-            _compose.cardEl.style.transformOrigin = 'top left';
-            _compose.cardEl.style.transform = `scale(${s})`;
         }
     }
 
-    // Drag handlers (mouse + touch)
-    const startDrag = (cx, cy) => {
-        if (!_compose || !_compose.cardEl) return;
-        _compose.dragging = true;
-        const rect = _compose.cardEl.getBoundingClientRect();
-        _compose.dragOff.x = cx - rect.left;
-        _compose.dragOff.y = cy - rect.top;
-        document.body.style.userSelect = 'none';
-    };
-    const moveDrag = (cx, cy) => {
-        if (!_compose || !_compose.dragging || !_compose.cardEl) return;
-        // Converte client coords para coords relativas ao overlay
-        const oRect = _compose.overlay.getBoundingClientRect();
-        let x = cx - oRect.left - _compose.dragOff.x;
-        let y = cy - oRect.top - _compose.dragOff.y;
-        // limitar dentro do overlay
-        const cRect = _compose.cardEl.getBoundingClientRect(); // já considera transform(scale)
-        const maxX = oRect.width - cRect.width;
-        const maxY = oRect.height - cRect.height;
-        x = Math.max(0, Math.min(maxX, x));
-        y = Math.max(0, Math.min(maxY, y));
-        _compose.cardEl.style.left = x + 'px';
-        _compose.cardEl.style.top = y + 'px';
-    };
-    const endDrag = () => {
-        if (_compose) _compose.dragging = false;
-        document.body.style.userSelect = '';
-    };
-
-    // mouse
-    overlay.addEventListener('mousedown', (ev) => {
-        if (!_compose.cardEl) return;
-        const rect = _compose.cardEl.getBoundingClientRect();
-        const inside = ev.clientX >= rect.left && ev.clientX <= rect.right && ev.clientY >= rect.top && ev.clientY <= rect.bottom;
-        if (inside) {
-            startDrag(ev.clientX, ev.clientY);
-            ev.preventDefault();
-        }
-        // se clicar fora do card, não inicia drag e não previne default: permite rolagem/seleção
-    });
-    window.addEventListener('mousemove', (ev) => moveDrag(ev.clientX, ev.clientY));
-    window.addEventListener('mouseup', endDrag);
-    // touch
-    overlay.addEventListener('touchstart', (ev) => {
-        if (!ev.touches || !ev.touches[0]) return;
-        // Pinch: 2+ dedos iniciam zoom
-        if (ev.touches.length >= 2) {
-            const a = ev.touches[0];
-            const b = ev.touches[1];
-            const dx = a.clientX - b.clientX;
-            const dy = a.clientY - b.clientY;
-            _compose.isPinching = true;
-            _compose.pinchStartDist = Math.hypot(dx, dy) || 1;
-            _compose.pinchBaseScale = _compose.scale || 100;
-            ev.preventDefault();
-            return;
-        }
-        // Drag com 1 dedo somente se iniciar dentro do card
-        const t = ev.touches[0];
-        if (_compose.cardEl) {
+    function initMouseDragAndTouch() {
+        // Drag handlers (mouse + touch)
+        const startDrag = (cx, cy) => {
+            if (!_compose || !_compose.cardEl) return;
+            _compose.dragging = true;
             const rect = _compose.cardEl.getBoundingClientRect();
-            const inside = t.clientX >= rect.left && t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom;
+            _compose.dragOff.x = cx - rect.left;
+            _compose.dragOff.y = cy - rect.top;
+            document.body.style.userSelect = 'none';
+        };
+        const moveDrag = (cx, cy) => {
+            if (!_compose || !_compose.dragging || !_compose.cardEl) return;
+            // Converte client coords para coords relativas ao overlay
+            const oRect = _compose.overlay.getBoundingClientRect();
+            let x = cx - oRect.left - _compose.dragOff.x;
+            let y = cy - oRect.top - _compose.dragOff.y;
+            // limitar dentro do overlay
+            const cRect = _compose.cardEl.getBoundingClientRect(); // já considera transform(scale)
+            const maxX = oRect.width - cRect.width;
+            const maxY = oRect.height - cRect.height;
+            x = Math.max(0, Math.min(maxX, x));
+            y = Math.max(0, Math.min(maxY, y));
+            _compose.cardEl.style.left = x + 'px';
+            _compose.cardEl.style.top = y + 'px';
+        };
+        const endDrag = () => {
+            if (_compose) _compose.dragging = false;
+            document.body.style.userSelect = '';
+        };
+
+        // mouse
+        sobreposicao.addEventListener('mousedown', (ev) => {
+            if (!_compose.cardEl) return;
+            const rect = _compose.cardEl.getBoundingClientRect();
+            const inside = ev.clientX >= rect.left && ev.clientX <= rect.right && ev.clientY >= rect.top && ev.clientY <= rect.bottom;
             if (inside) {
-                startDrag(t.clientX, t.clientY);
-                ev.preventDefault(); // só previne se for iniciar drag
+                startDrag(ev.clientX, ev.clientY);
+                ev.preventDefault();
             }
-        }
-        // se tocar fora do card, não inicia drag e não previne default: permite rolagem
-    }, { passive: false });
-    window.addEventListener('touchmove', (ev) => {
-        if (!ev.touches || !ev.touches[0]) return;
-        // Se pinch ativo e dois dedos, ajustar escala
-        if (_compose && _compose.isPinching && ev.touches.length >= 2) {
-            const a = ev.touches[0];
-            const b = ev.touches[1];
-            const dx = a.clientX - b.clientX;
-            const dy = a.clientY - b.clientY;
-            const dist = Math.hypot(dx, dy) || 1;
-            const newScale = Math.max(35, Math.min(160, (_compose.pinchBaseScale || 100) * (dist / (_compose.pinchStartDist || 1))));
-            _compose.scale = newScale;
+            // se clicar fora do card, não inicia drag e não previne default: permite rolagem/seleção
+        });
+        window.addEventListener('mousemove', (ev) => moveDrag(ev.clientX, ev.clientY));
+        window.addEventListener('mouseup', endDrag);
+        // touch
+        sobreposicao.addEventListener('touchstart', (ev) => {
+            if (!ev.touches || !ev.touches[0]) return;
+            // Pinch: 2+ dedos iniciam zoom
+            if (ev.touches.length >= 2) {
+                const a = ev.touches[0];
+                const b = ev.touches[1];
+                const dx = a.clientX - b.clientX;
+                const dy = a.clientY - b.clientY;
+                _compose.isPinching = true;
+                _compose.pinchStartDist = Math.hypot(dx, dy) || 1;
+                _compose.pinchBaseScale = _compose.scale || 100;
+                ev.preventDefault();
+                return;
+            }
+            // Drag com 1 dedo somente se iniciar dentro do card
+            const t = ev.touches[0];
             if (_compose.cardEl) {
-                const s = (newScale / 100);
-                _compose.cardEl.style.transformOrigin = 'top left';
-                _compose.cardEl.style.transform = `scale(${s})`;
+                const rect = _compose.cardEl.getBoundingClientRect();
+                const inside = t.clientX >= rect.left && t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom;
+                if (inside) {
+                    startDrag(t.clientX, t.clientY);
+                    ev.preventDefault(); // só previne se for iniciar drag
+                }
             }
-            if (_compose.scaleInput) {
-                _compose.scaleInput.value = String(Math.round(newScale));
-                if (_compose.scaleLabel) _compose.scaleLabel.textContent = `${Math.round(newScale)}%`;
+            // se tocar fora do card, não inicia drag e não previne default: permite rolagem
+        }, { passive: false });
+        window.addEventListener('touchmove', (ev) => {
+            if (!ev.touches || !ev.touches[0]) return;
+            // Se pinch ativo e dois dedos, ajustar escala
+            if (_compose && _compose.isPinching && ev.touches.length >= 2) {
+                const a = ev.touches[0];
+                const b = ev.touches[1];
+                const dx = a.clientX - b.clientX;
+                const dy = a.clientY - b.clientY;
+                const dist = Math.hypot(dx, dy) || 1;
+                const newScale = Math.max(35, Math.min(160, (_compose.pinchBaseScale || 100) * (dist / (_compose.pinchStartDist || 1))));
+                _compose.scale = newScale;
+                if (_compose.cardEl) {
+                    const s = (newScale / 100);
+                    _compose.cardEl.style.transformOrigin = 'top left';
+                    _compose.cardEl.style.transform = `scale(${s})`;
+                }
+                if (_compose.scaleInput) {
+                    _compose.scaleInput.value = String(Math.round(newScale));
+                    if (_compose.scaleLabel) _compose.scaleLabel.textContent = `${Math.round(newScale)}%`;
+                }
+                ev.preventDefault();
+                return;
             }
-            ev.preventDefault();
-            return;
-        }
-        // Caso contrário, processa drag com 1 dedo
-        const t = ev.touches[0];
-        moveDrag(t.clientX, t.clientY);
-    }, { passive: false });
-    window.addEventListener('touchend', (ev) => {
-        if (_compose && ev.touches && ev.touches.length < 2) {
-            _compose.isPinching = false;
-        }
-        endDrag();
-    });
+            // Caso contrário, processa drag com 1 dedo
+            const t = ev.touches[0];
+            moveDrag(t.clientX, t.clientY);
+        }, { passive: false });
+        window.addEventListener('touchend', (ev) => {
+            if (_compose && ev.touches && ev.touches.length < 2) {
+                _compose.isPinching = false;
+            }
+            endDrag();
+        });
+    }
 
-    exportBtn.addEventListener('click', async () => {
-        if (!_compose || !_compose.img.src) return;
-        try {
-            const target = _compose.exportRoot || wrap;
-            const canvas = await html2canvas(target, { backgroundColor: null, useCORS: true, scale: EXPORT_SCALE });
-            const dataUrl = canvas.toDataURL(EXPORT_MIME, EXPORT_QUALITY);
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            // Monta nome do arquivo usando o texto de scoreDistancia (sem espaços)
-            const distEl = document.getElementById('scoreDistancia');
-            let distStr = (distEl && distEl.textContent) ? distEl.textContent.trim() : '';
-            distStr = distStr.replace(/\s+/g, '');
-            const notaEl = document.getElementById('scoreBig');
-            let notaStr = (notaEl && notaEl.textContent) ? notaEl.textContent.trim() : '';
-            notaStr = notaStr.replace(/\s+/g, '');
-            const now = new Date();
-            const dd = String(now.getDate()).padStart(2, '0');
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const yy = String(now.getFullYear()).slice(-2);
-            link.download = `igdcc-${notaStr}-${distStr}_${dd}-${mm}-${yy}.png`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (e) {
-            console.error('Falha ao exportar imagem composta:', e);
-            alert('Não foi possível gerar a imagem.');
-        }
-    });
-
-    if (shareBtn) {
-        shareBtn.addEventListener('click', async () => {
+    function initExportHandler() {
+        const calcularEscalaAlvo = (target) => {
+            const w = (target && target.getBoundingClientRect && target.getBoundingClientRect().width) || 0;
+            return w ? (EXPORT_LARGURA_ALVO / w) : EXPORT_SCALE_PADRAO;
+        };
+        botaoExportar.addEventListener('click', async () => {
             if (!_compose || !_compose.img.src) return;
             try {
-                const target = _compose.exportRoot || wrap;
-                const canvas = await html2canvas(target, { backgroundColor: null, useCORS: true, scale: 3 });
-                const distEl = document.getElementById('scoreDistancia');
-                let distStr = (distEl && distEl.textContent) ? distEl.textContent.trim() : '';
-                distStr = distStr.replace(/\s+/g, '');
-                const notaEl = document.getElementById('scoreBig');
-                let notaStr = (notaEl && notaEl.textContent) ? notaEl.textContent.trim() : '';
-                notaStr = notaStr.replace(/\s+/g, '');
-                const now = new Date();
-                const dd = String(now.getDate()).padStart(2, '0');
-                const mm = String(now.getMonth() + 1).padStart(2, '0');
-                const yy = String(now.getFullYear()).slice(-2);
-                const filename = `igdcc-${notaStr}-${distStr}_${dd}-${mm}-${yy}.png`;
+                const target = _compose.exportRoot || container;
+                const escala = calcularEscalaAlvo(target);
+                const canvas = await html2canvas(target, { backgroundColor: null, useCORS: true, scale: escala });
+                const dataUrl = canvas.toDataURL(EXPORT_MIME, EXPORT_QUALITY);
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                // Nome do arquivo simplificado via helper
+                link.download = montarNomeArquivo();
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            } catch (e) {
+                console.error('Falha ao exportar imagem composta:', e);
+                alert('Não foi possível gerar a imagem.');
+            }
+        });
+    }
+
+    function initShareHandler() {
+        if (!botaoCompartilhar) return;
+        botaoCompartilhar.addEventListener('click', async () => {
+            if (!_compose || !_compose.img.src) return;
+            try {
+                const target = _compose.exportRoot || container;
+                // calcular em tempo real para garantir ~3000px de largura
+                const w = (target && target.getBoundingClientRect && target.getBoundingClientRect().width) || 0;
+                const escala = w ? (EXPORT_LARGURA_ALVO / w) : EXPORT_SCALE_PADRAO;
+                const canvas = await html2canvas(target, { backgroundColor: null, useCORS: true, scale: escala });
+                const filename = montarNomeArquivo();
 
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, EXPORT_MIME, EXPORT_QUALITY));
                 if (!blob) throw new Error('Falha ao gerar imagem');
@@ -809,10 +878,18 @@ function setupCompositor() {
         });
     }
 
+    // inicialização simplificada
+    initState();
+    initFileLoader();
+    initScaleControls();
+    initMouseDragAndTouch();
+    initExportHandler();
+    initShareHandler();
+
     // criação do card no overlay ocorre somente após a imagem ser carregada (img.onload)
 }
 
-function ensureOverlayCard() {
+function garantirCardOverlay() {
     if (!_compose) return;
     const srcCard = document.getElementById('shareCard');
     if (!srcCard || srcCard.style.display === 'none') return;
@@ -821,9 +898,9 @@ function ensureOverlayCard() {
         const posLeft = _compose.cardEl.style.left;
         const posTop = _compose.cardEl.style.top;
         const totalW = (_compose.baseWidth != null) ? _compose.baseWidth : _compose.cardEl.getBoundingClientRect().width;
-        _compose.cardEl.replaceWith(cloneShareCard(srcCard));
+        _compose.cardEl.replaceWith(clonarCardCompartilhar(srcCard));
         _compose.cardEl = _compose.overlay.querySelector('.share-card');
-        makeOverlayPositioned(_compose.cardEl);
+        tornarOverlayPosicionado(_compose.cardEl);
         // manter posição e largura atual respeitando box model
         const cs = window.getComputedStyle(srcCard);
         const num = (v) => parseFloat(v || '0') || 0;
@@ -840,7 +917,7 @@ function ensureOverlayCard() {
         _compose.cardEl.style.transform = `scale(${s})`;
         return;
     }
-    const clone = cloneShareCard(srcCard);
+    const clone = clonarCardCompartilhar(srcCard);
     _compose.cardEl = clone;
     _compose.overlay.style.position = 'absolute';
     _compose.overlay.style.inset = '0';
@@ -883,7 +960,7 @@ function ensureOverlayCard() {
     }
 }
 
-function cloneShareCard(srcCard) {
+function clonarCardCompartilhar(srcCard) {
     const clone = srcCard.cloneNode(true);
     // remove id do próprio nó e de todos os descendentes para evitar duplicatas no DOM
     const stripIds = (el) => {
@@ -929,12 +1006,12 @@ function cloneShareCard(srcCard) {
         }
     } catch (_) { }
     // Distribui emojis somente no clone e não para nota 100
-    try { distributeZoneEmojisOnCard(clone); } catch (_) { }
+    try { distribuirEmojisDaZonaNoCard(clone); } catch (_) { }
     return clone;
 }
 
 // Redistribui emojis no card clonado (não afeta o card original) e ignora quando a nota é 100
-function distributeZoneEmojisOnCard(cardEl) {
+function distribuirEmojisDaZonaNoCard(cardEl) {
     if (!cardEl) return;
     try {
         const scoreEl = cardEl.querySelector('.score-big');
@@ -1012,18 +1089,18 @@ function distributeZoneEmojisOnCard(cardEl) {
     } catch (_) { }
 }
 
-function makeOverlayPositioned(el) {
+function tornarOverlayPosicionado(el) {
     if (!el) return;
     el.style.position = 'absolute';
     el.style.pointerEvents = 'none';
 }
 
 // Exposta para ser chamada após recalcular o card
-function updateOverlayCardFromShareCard() {
+function atualizarCardOverlayDoShareCard() {
     if (!_compose) return;
     const srcCard = document.getElementById('shareCard');
     if (!srcCard || srcCard.style.display === 'none') return;
-    ensureOverlayCard();
+    garantirCardOverlay();
     if (_compose.cardEl) {
         // Atualiza conteúdo textual do clone para refletir mudanças
         const fresh = srcCard.cloneNode(true);
@@ -1084,13 +1161,13 @@ function updateOverlayCardFromShareCard() {
             }
         } catch (_) { }
         // Distribui emojis somente no clone e não para nota 100
-        try { distributeZoneEmojisOnCard(fresh); } catch (_) { }
+        try { distribuirEmojisDaZonaNoCard(fresh); } catch (_) { }
         _compose.cardEl.replaceWith(fresh);
         _compose.cardEl = fresh;
     }
 }
 
-function applyOverlayWidthFromBase() {
+function aplicarLarguraOverlayDaBase() {
     if (!_compose || !_compose.cardEl || !_compose.baseWidth) return;
     const cs = window.getComputedStyle(document.getElementById('shareCard'));
     // garante largura base fixa
@@ -1106,7 +1183,7 @@ function applyOverlayWidthFromBase() {
     _compose.cardEl.style.transform = `scale(${s})`;
 }
 
-function recalibrateOverlayWidthFromSource() {
+function recalibrarLarguraOverlayDaOrigem() {
     if (!_compose || !_compose.cardEl) return;
     const srcCard = document.getElementById('shareCard');
     if (!srcCard || srcCard.style.display === 'none') return;
