@@ -47,7 +47,7 @@ function preencherTabelaReferencia() {
 // Função helper para obter distância formatada para 1 casa decimal (usada nos cálculos)
 function obterDistanciaFormatada() {
     const valor = parseFloat(document.getElementById('distancia').value);
-    return !isNaN(valor) ? parseFloat(valor.toFixed(1)) : valor;
+    return !isNaN(valor) ? parseFloat(valor/*.toFixed(1)*/) : valor;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -60,18 +60,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const pEl = document.getElementById('pace');
     const iEl = document.getElementById('idade');
     const dEl = document.getElementById('distancia');
+    const sEl = document.getElementById('sexo');
     const vT = localStorage.getItem('igdcc_tempo');
     const vP = localStorage.getItem('igdcc_pace');
     const vI = localStorage.getItem('igdcc_idade');
     const vD = localStorage.getItem('igdcc_distancia');
+    const vS = localStorage.getItem('igdcc_sexo');
     if (tEl && vT != null) tEl.value = vT;
     if (pEl && vP != null) pEl.value = vP;
     if (iEl && vI != null) iEl.value = vI;
     if (dEl && vD != null) dEl.value = vD;
+    if (sEl && vS != null) sEl.value = vS;
     if (tEl) tEl.addEventListener('input', () => localStorage.setItem('igdcc_tempo', tEl.value || ''));
     if (pEl) pEl.addEventListener('input', () => localStorage.setItem('igdcc_pace', pEl.value || ''));
     if (iEl) iEl.addEventListener('change', () => localStorage.setItem('igdcc_idade', iEl.value || ''));
     if (dEl) dEl.addEventListener('change', () => localStorage.setItem('igdcc_distancia', dEl.value || ''));
+    if (sEl) sEl.addEventListener('change', () => localStorage.setItem('igdcc_sexo', sEl.value || ''));
 
     // restaurar tipoEntrada salvo
     const tipoSalvo = localStorage.getItem('igdcc_tipoEntrada');
