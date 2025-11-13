@@ -3,6 +3,28 @@
 const tituloGraficos = document.getElementById('titulo-graficos');
 const inputIdade = document.getElementById('idade');
 
+// Função para atualizar emojis baseado no sexo selecionado
+function atualizarEmojisPorSexo(sexo) {
+    // Atualiza emoji no label do campo sexo
+    const labelSexo = document.querySelector('label[for="sexo"]');
+    if (labelSexo) {
+        labelSexo.innerHTML = sexo === 'M' ? '👨 Sexo:' : '👩 Sexo:';
+    }
+    
+    // Atualiza emoji no título IGDCC
+    const tituloIGDCC = document.querySelector('h1');
+    if (tituloIGDCC) {
+        const emojiCorredor = sexo === 'M' ? '🏃🏻‍♂️' : '🏃🏻‍♀️';
+        // Substitui o emoji do corredor mantendo o resto do conteúdo
+        const textoAtual = tituloIGDCC.innerHTML;
+        // Substitui tanto o emoji masculino quanto feminino do corredor
+        const textoNovo = textoAtual
+            .replace(/🏃🏻‍♀️/g, emojiCorredor)
+            .replace(/🏃🏻‍♂️/g, emojiCorredor);
+        tituloIGDCC.innerHTML = textoNovo;
+    }
+}
+
 // Preenche tabela de referência para um sexo específico em um tbody dado
 function preencherTabelaParaSexo(tbodyId, sexoReferencia) {
     const tbody = document.getElementById(tbodyId);
@@ -75,7 +97,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (pEl) pEl.addEventListener('input', () => localStorage.setItem('igdcc_pace', pEl.value || ''));
     if (iEl) iEl.addEventListener('change', () => localStorage.setItem('igdcc_idade', iEl.value || ''));
     if (dEl) dEl.addEventListener('change', () => localStorage.setItem('igdcc_distancia', dEl.value || ''));
-    if (sEl) sEl.addEventListener('change', () => localStorage.setItem('igdcc_sexo', sEl.value || ''));
+    if (sEl) {
+        sEl.addEventListener('change', () => {
+            localStorage.setItem('igdcc_sexo', sEl.value || '');
+            atualizarEmojisPorSexo(sEl.value);
+        });
+        // Atualizar emojis na inicialização também
+        atualizarEmojisPorSexo(sEl.value);
+    }
 
     // restaurar tipoEntrada salvo
     const tipoSalvo = localStorage.getItem('igdcc_tipoEntrada');
