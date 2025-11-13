@@ -56,6 +56,41 @@ document.addEventListener('DOMContentLoaded', function () {
     const entradaTempo = document.getElementById('tempoInput');
     const entradaPace = document.getElementById('paceInput');
 
+    const tEl = document.getElementById('tempo');
+    const pEl = document.getElementById('pace');
+    const iEl = document.getElementById('idade');
+    const dEl = document.getElementById('distancia');
+    const vT = localStorage.getItem('igdcc_tempo');
+    const vP = localStorage.getItem('igdcc_pace');
+    const vI = localStorage.getItem('igdcc_idade');
+    const vD = localStorage.getItem('igdcc_distancia');
+    if (tEl && vT != null) tEl.value = vT;
+    if (pEl && vP != null) pEl.value = vP;
+    if (iEl && vI != null) iEl.value = vI;
+    if (dEl && vD != null) dEl.value = vD;
+    if (tEl) tEl.addEventListener('input', () => localStorage.setItem('igdcc_tempo', tEl.value || ''));
+    if (pEl) pEl.addEventListener('input', () => localStorage.setItem('igdcc_pace', pEl.value || ''));
+    if (iEl) iEl.addEventListener('change', () => localStorage.setItem('igdcc_idade', iEl.value || ''));
+    if (dEl) dEl.addEventListener('change', () => localStorage.setItem('igdcc_distancia', dEl.value || ''));
+
+    // restaurar tipoEntrada salvo
+    const tipoSalvo = localStorage.getItem('igdcc_tipoEntrada');
+    if (tipoSalvo === 'tempo' || tipoSalvo === 'pace') {
+        const rb = document.querySelector(`input[name="tipoEntrada"][value="${tipoSalvo}"]`);
+        if (rb) rb.checked = true;
+        if (tipoSalvo === 'tempo') {
+            entradaTempo.style.display = 'block';
+            entradaPace.style.display = 'none';
+            document.getElementById('tempo').required = true;
+            document.getElementById('pace').required = false;
+        } else {
+            entradaTempo.style.display = 'none';
+            entradaPace.style.display = 'block';
+            document.getElementById('tempo').required = false;
+            document.getElementById('pace').required = true;
+        }
+    }
+
     botoesRadio.forEach(radio => {
         radio.addEventListener('change', function () {
             if (this.value === 'tempo') {
@@ -63,11 +98,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 entradaPace.style.display = 'none';
                 document.getElementById('tempo').required = true;
                 document.getElementById('pace').required = false;
+                localStorage.setItem('igdcc_tipoEntrada', 'tempo');
             } else {
                 entradaTempo.style.display = 'none';
                 entradaPace.style.display = 'block';
                 document.getElementById('tempo').required = false;
                 document.getElementById('pace').required = true;
+                localStorage.setItem('igdcc_tipoEntrada', 'pace');
             }
         });
     });
