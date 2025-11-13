@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '70-79': '🏃‍♂️👏 QUE TREINO TOP!! 👏🏃‍♂️',
                 '80-89': '🔥🏃‍♂️👉 SÉRIO ISSO?!! 👈🏃‍♂️🔥',
                 '90-99': '😱🏅⚡ DANGER ZONE ⚡🏅😱',
-                '100': '🏆🥇⚓ É P I C O ⚓🥇🏆'
+                '100': '💯🏆😂 DE BIKE, CTZ 😂🏆💯'
             };
             const frasesMulher = {
                 ...frasesHomem,
@@ -197,6 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '60-69': '🎯 ZONA 2, PAGO!! 🎯',
                 '80-89': '🔥 SÉRIO ISSO?!! 🔥',
                 '90-99': '⚡ DANGER ZONE ⚡',
+                '100': '💯😂 DE BIKE, CTZ 😂💯'
             }
             const frasesHomemCardPrint = {
                 ...frasesHomem,
