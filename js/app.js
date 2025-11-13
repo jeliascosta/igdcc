@@ -312,8 +312,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             } catch (e) { /* segura se inputs faltarem */ }
 
+
             const distLabel = Number.isFinite(distancia)
-                ? (distancia % 1 === 0 ? `${distancia} k` : `${distancia.toFixed(1)} k`)
+                ? (parseFloat(distancia.toFixed(1)) % 1 === 0 ? `${distancia.toFixed(0)} k` : `${distancia.toFixed(1)} k`)
                 : '-- k';
 
 
