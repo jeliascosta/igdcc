@@ -14,12 +14,18 @@ function calcularPontosHustle(distancia, notaIGDCC, idade, distanciaAtual) {
     const notaBaseF = calcularNotaPorPace("7:00", idade, 'F', distanciaAtual);
     let notaBase = notaBaseF;
 
+    const deltaCorrida = 0.6755; //km
+    const deltaCaminhada = 0.9655; //km
+    let deltaEsforco = deltaCorrida;
+    if (notaIGDCC < notaBase)
+        deltaEsforco = deltaCaminhada;
+
     // Use the base score in the scaling factor
     const fatorEscala = notaIGDCC / notaBase;
     console.log("Nota base para pts hustle:", notaBase, "fator escala:", fatorEscala)
 
-    // 1 point base per 0.675 km (GymRats standard), scaled (positivamente) by IGDCC factor
-    return (distancia / 0.6755) * (fatorEscala > 1 ? fatorEscala : 1);
+    // scaled (positivamente) by IGDCC factor
+    return (distancia / deltaEsforco) * (fatorEscala > 1 ? fatorEscala : 1);
 }
 
 const tituloGraficos = document.getElementById('titulo-graficos');
@@ -413,13 +419,15 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 zonePhraseEl.style.color = ''; // resetar para cor padrão
             }
-            // Exibe o botão copiar se o card existir
+            // Exibe o botão copiar e opções se o card existir
             const copyBtn = document.getElementById('copyCardBtn');
-            const shareCard = document.getElementById('shareCard');
-            if (shareCard && shareCard.style.display !== 'none') {
+            const opcoesCard = document.getElementById('opcoesCard');
+            if (shareCardEl && shareCardEl.style.display !== 'none') {
                 copyBtn.style.display = 'inline-block';
+                opcoesCard.style.display = 'flex';
             } else {
                 copyBtn.style.display = 'none';
+                opcoesCard.style.display = 'none';
             }
             // Exibe a seção do compositor apenas após calcular a nota
             const compositor = document.getElementById('compositor');
@@ -428,9 +436,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeof atualizarCardOverlayDoShareCard === 'function') atualizarCardOverlayDoShareCard();
             if (typeof recalibrarLarguraOverlayDaOrigem === 'function') recalibrarLarguraOverlayDaOrigem();
         } catch (error) {
-            const shareCard = document.getElementById('shareCard');
-            if (shareCard) {
-                shareCard.style.display = 'none';
+            const shareCardEl = document.getElementById('shareCard');
+            if (shareCardEl) {
+                shareCardEl.style.display = 'none';
             }
             document.getElementById('nota').innerHTML = `<div style="color: red;">Erro: ${error.message}</div>`;
         }
@@ -692,6 +700,36 @@ function atualizarTituloReferencia() {
 document.getElementById('idade').addEventListener('change', onFormInputsChange);
 document.getElementById('sexo').addEventListener('change', onFormInputsChange);
 document.getElementById('distancia').addEventListener('change', onFormInputsChange);
+
+// Adicionar listener para o toggle de mostrar/ocultar pontos Hustle
+document.getElementById('toggleHustle').addEventListener('change', function () {
+    const hustleContainers = document.querySelectorAll('.meta-item:has(.hustle-points)');
+    const isChecked = this.checked;
+
+    // Salvar preferência no localStorage
+    localStorage.setItem('showHustlePoints', isChecked);
+
+    // Mostrar ou ocultar todo o container de Hustle
+    hustleContainers.forEach(container => {
+        container.style.display = isChecked ? 'unset' : 'none';
+    });
+});
+
+// Verificar preferência salva ao carregar a página
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleHustle = document.getElementById('toggleHustle');
+    const hustleContainers = document.querySelectorAll('.meta-item:has(.hustle-points)');
+    const savedPreference = localStorage.getItem('showHustlePoints');
+
+    // Se não houver preferência salva, mostrar por padrão
+    const showHustlePoints = savedPreference === null ? true : savedPreference === 'true';
+
+    // Aplicar preferência
+    toggleHustle.checked = showHustlePoints;
+    hustleContainers.forEach(container => {
+        container.style.display = showHustlePoints ? 'unset' : 'none';
+    });
+});
 
 // Inicializar o título
 document.addEventListener('DOMContentLoaded', onFormInputsChange);

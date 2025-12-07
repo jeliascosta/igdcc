@@ -52,7 +52,7 @@
             <input type="number" id="idade" value="35" required>
 
             <label for="sexo">👩 Sexo:</label>
-            <select id="sexo" required>
+            <select id="sexo" required style="width: 100%;">
                 <option value="M">Masculino</option>
                 <option value="F" selected>Feminino</option>
             </select>
@@ -92,8 +92,8 @@
                             <div style="font-size:.95rem;font-weight:800" id="cardPace"></div>
                         </div>
                         <div class="meta-item" style="text-align:center">
-                            <div style="font-size:.75rem;font-weight:700;opacity:.9">🏆 Hustle</div>
-                            <div style="font-size:.95rem;font-weight:800" id="cardHustle">-</div>
+                            <div style="font-size:.75rem;font-weight:700;opacity:.9;">🏆 Hustle</div>
+                            <div style="font-size:.95rem;font-weight:800" id="cardHustle" class="hustle-points">-</div>
                         </div>
                     </div>
                     <div class="card-corner card-corner-left"></div>
@@ -101,6 +101,15 @@
                     <div class="zone-phrase" id="zonePhrase"></div>
                 </div>
             </div>
+            <div id="opcoesCard" class="hustle-toggle-container"
+                style="display: none; justify-content: center; align-items: center; margin: 10px 0;">
+                <span style="margin-right: 10px; font-weight: bold;">Mostrar Pontos Hustle:</span>
+                <label class="switch" title="Mostrar/ocultar pontos">
+                    <input type="checkbox" id="toggleHustle" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
             <div style="text-align:center; margin-top:10px;">
                 <button type="button" id="copyCardBtn" style="display:none;">📋 Compartilhar Card</button>
             </div>
@@ -261,7 +270,7 @@
     <!-- Biblioteca para capturar o div como imagem -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-    
+
 
     <script src="js/app.js"></script>
 </body>

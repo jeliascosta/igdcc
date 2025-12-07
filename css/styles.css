@@ -49,7 +49,7 @@ label {
 input[type="text"],
 input[type="number"],
 select {
-    width: 97%;
+    width: 95%;
     padding: 10px;
     margin-bottom: 20px;
     border: 1px solid #ccc;
@@ -327,10 +327,63 @@ tr:hover {
 /* nota grande — destaque (big number) */
 .share-card .score-big{
     font-family: 'Inter', sans-serif;
-    font-size: 5.5rem;      /* maior que antes */
+    font-size: 6.0rem;      /* maior que antes */
     font-weight: 900;
     line-height: 1;
     letter-spacing: -0.02em;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 17px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #007BFF;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #007BFF;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
 }
 
 /* zona pequena (subtítulo) */
@@ -418,6 +471,80 @@ tr:hover {
 .share-card .card-meta .meta-item{
     text-align:center;
     min-width:78px;
+}
+
+/* Estilos para o contêiner de distância e botão de alternância Hustle */
+.distancia-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.distancia-container > label {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.distancia-container > input[type="number"] {
+    flex: 1;
+    margin-bottom: 0;
+    min-width: 80px;
+}
+
+.hustle-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: #555;
+}
+
+/* Estilos para o switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #007BFF;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
 }
 
 /* label e valor das metas */
