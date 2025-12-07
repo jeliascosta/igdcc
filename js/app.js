@@ -713,6 +713,12 @@ document.getElementById('toggleHustle').addEventListener('change', function () {
     hustleContainers.forEach(container => {
         container.style.display = isChecked ? 'unset' : 'none';
     });
+
+    // Atualizar o card de compartilhamento se estiver visível
+    const shareCard = document.getElementById('shareCard');
+    if (shareCard && shareCard.style.display !== 'none') {
+        atualizarCardOverlayDoShareCard();
+    }
 });
 
 // Verificar preferência salva ao carregar a página
