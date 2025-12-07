@@ -1131,6 +1131,45 @@ function clonarCardCompartilhar(srcCard) {
         ];
         for (const p of props) clone.style[p] = cs[p];
     } catch (_) { }
+    
+    // Adicionar pontos Hustle acima da zone-phrase
+    try {
+        // Obter o elemento dos pontos Hustle do card original
+        const srcHustlePoints = srcCard.querySelector('#cardHustle');
+        const zp = clone.querySelector('.zone-phrase');
+        
+        if (srcHustlePoints && srcHustlePoints.textContent && srcHustlePoints.textContent !== '-' && zp) {
+            const hustlePoints = srcHustlePoints.textContent.trim();
+            
+            // Criar container para os pontos Hustle
+            const hustleDiv = document.createElement('div');
+            hustleDiv.className = 'hustle-points-display';
+            hustleDiv.style.textAlign = 'center';
+            hustleDiv.style.margin = '10px 0 5px 0';
+            hustleDiv.style.fontSize = '1.2rem';
+            hustleDiv.style.fontWeight = 'bold';
+            hustleDiv.style.color = srcHustlePoints.style.color || '';
+            
+            // Criar ícone de fogo
+            const hustleIcon = document.createElement('span');
+            hustleIcon.textContent = '🔥 ';
+            hustleIcon.style.display = 'inline-block';
+            
+            // Criar texto com os pontos Hustle
+            const hustleText = document.createElement('span');
+            hustleText.textContent = hustlePoints.endsWith('pts') ? hustlePoints : `${hustlePoints} pts`;
+            
+            // Montar o elemento
+            hustleDiv.appendChild(hustleIcon);
+            hustleDiv.appendChild(hustleText);
+            
+            // Inserir antes da zone-phrase
+            zp.parentNode.insertBefore(hustleDiv, zp);
+        }
+    } catch (e) { 
+        console.error('Erro ao adicionar pontos Hustle ao card:', e);
+    }
+    
     // Ajuste específico do clone: aplicar frasesPrint e espaçamento/estilos da zone-phrase para print/export
     try {
         const zp = clone.querySelector('.zone-phrase');
@@ -1140,12 +1179,13 @@ function clonarCardCompartilhar(srcCard) {
                 const pf = (srcCard && srcCard.dataset && srcCard.dataset.phrasePrint) || '';
                 if (pf) zp.textContent = pf;
             } catch (_) { }
-            zp.style.marginTop = '12px';
+            zp.style.marginTop = '5px'; // Reduzido para acomodar os pontos Hustle
             // remover blur no clone (print/export)
             zp.style.backdropFilter = 'none';
             zp.style.webkitBackdropFilter = 'none';
         }
     } catch (_) { }
+    
     // Distribui emojis somente no clone e não para nota 100
     try { distribuirEmojisDaZonaNoCard(clone); } catch (_) { }
     return clone;
@@ -1287,7 +1327,7 @@ function atualizarCardOverlayDoShareCard() {
         const s2 = (_compose.scale / 100);
         fresh.style.transformOrigin = 'top left';
         fresh.style.transform = `scale(${s2})`;
-        // Ajuste específico do clone atualizado: aplicar frasesPrint e garantir margin-top da zone-phrase em 12px e sem blur
+        // Ajuste específico do clone atualizado: aplicar frasesPrint e garantir margin-top da zone-phrase e sem blur
         try {
             const zp2 = fresh.querySelector('.zone-phrase');
             if (zp2) {
@@ -1296,11 +1336,44 @@ function atualizarCardOverlayDoShareCard() {
                     const pf2 = (srcCard && srcCard.dataset && srcCard.dataset.phrasePrint) || '';
                     if (pf2) zp2.textContent = pf2;
                 } catch (_) { }
-                zp2.style.marginTop = '12px';
+                zp2.style.marginTop = '5px'; // Reduzido para acomodar os pontos Hustle
                 zp2.style.backdropFilter = 'none';
                 zp2.style.webkitBackdropFilter = 'none';
             }
-        } catch (_) { }
+            // Garantir que os pontos Hustle estejam presentes no card atualizado
+            const existingHustle = fresh.querySelector('.hustle-points-display');
+            if (!existingHustle) {
+                const srcHustlePoints = srcCard.querySelector('#cardHustle');
+                if (srcHustlePoints && srcHustlePoints.textContent && srcHustlePoints.textContent !== '-') {
+                    const hustlePoints = srcHustlePoints.textContent.trim();
+                    const hustleDiv = document.createElement('div');
+                    hustleDiv.className = 'hustle-points-display';
+                    hustleDiv.style.textAlign = 'center';
+                    hustleDiv.style.margin = '10px 0 5px 0';
+                    hustleDiv.style.fontSize = '1.2rem';
+                    hustleDiv.style.fontWeight = 'bold';
+                    hustleDiv.style.color = srcHustlePoints.style.color || '';
+                    
+                    const hustleIcon = document.createElement('span');
+                    hustleIcon.textContent = '🔥 ';
+                    hustleIcon.style.display = 'inline-block';
+                    
+                    const hustleText = document.createElement('span');
+                    hustleText.textContent = hustlePoints.endsWith('pts') ? hustlePoints : `${hustlePoints} pts`;
+                    
+                    hustleDiv.appendChild(hustleIcon);
+                    hustleDiv.appendChild(hustleText);
+                    
+                    // Inserir antes da zone-phrase
+                    const zp = fresh.querySelector('.zone-phrase');
+                    if (zp) {
+                        zp.parentNode.insertBefore(hustleDiv, zp);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Erro ao atualizar card com pontos Hustle:', e);
+        }
         // Distribui emojis somente no clone e não para nota 100
         try { distribuirEmojisDaZonaNoCard(fresh); } catch (_) { }
         _compose.cardEl.replaceWith(fresh);
