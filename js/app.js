@@ -1143,7 +1143,6 @@ function prepararCardClonado(srcCard, clone) {
         const showHustlePoints = localStorage.getItem('showHustlePoints') !== 'false'; // true por padrão
         const srcHustlePoints = srcCard.querySelector('#cardHustle');
         const zp = clone.querySelector('.zone-phrase');
-        
         if (showHustlePoints && srcHustlePoints && srcHustlePoints.textContent && 
             srcHustlePoints.textContent.trim() !== '-' && zp) {
             const hustlePoints = srcHustlePoints.textContent.trim();
@@ -1153,13 +1152,13 @@ function prepararCardClonado(srcCard, clone) {
             hustleDiv.className = 'hustle-points-display';
             hustleDiv.style.textAlign = 'center';
             hustleDiv.style.margin = '10px 0 5px 0';
-            hustleDiv.style.fontSize = '1.2rem';
-            hustleDiv.style.fontWeight = 'bold';
+            hustleDiv.style.fontSize = '1rem';
+            hustleDiv.style.fontWeight = '800';
             hustleDiv.style.color = srcHustlePoints.style.color || '';
             
             // Criar ícone de fogo
             const hustleIcon = document.createElement('span');
-            hustleIcon.textContent = '🔥 ';
+            hustleIcon.textContent = '💪 ';
             hustleIcon.style.display = 'inline-block';
             
             // Criar texto com os pontos Hustle
