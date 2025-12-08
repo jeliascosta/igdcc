@@ -420,13 +420,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 zonePhraseEl.style.color = ''; // resetar para cor padrão
             }
             // Exibe o botão copiar e opções se o card existir
-            const copyBtn = document.getElementById('copyCardBtn');
+            const acoesCard = document.getElementById('cardActions');
             const opcoesCard = document.getElementById('opcoesCard');
             if (shareCardEl && shareCardEl.style.display !== 'none') {
-                copyBtn.style.display = 'inline-block';
+                acoesCard.style.display = 'flex';
                 opcoesCard.style.display = 'flex';
             } else {
-                copyBtn.style.display = 'none';
+                acoesCard.style.display = 'none';
                 opcoesCard.style.display = 'none';
             }
             // Exibe a seção do compositor apenas após calcular a nota
@@ -701,10 +701,49 @@ document.getElementById('idade').addEventListener('change', onFormInputsChange);
 document.getElementById('sexo').addEventListener('change', onFormInputsChange);
 document.getElementById('distancia').addEventListener('change', onFormInputsChange);
 
+// Função para atualizar o botão de copiar pontos Hustle
+function atualizarBotaoCopiarHustle() {
+    const button = document.getElementById('copyHustlePointsBtn');
+    const cardHustle = document.getElementById('cardHustle');
+    const showHustlePoints = localStorage.getItem('showHustlePoints') !== 'false';
+
+    if (button && cardHustle) {
+        // Mostrar o botão apenas se os pontos Hustle estiverem ativos e houver pontos para copiar
+        const shouldShow = showHustlePoints && cardHustle.textContent && cardHustle.textContent.trim() !== '-';
+        button.style.display = shouldShow ? 'unset' : 'none';
+
+        // Adicionar o event listener apenas uma vez
+        if (!button.hasAttribute('data-listener-added')) {
+            button.addEventListener('click', async () => {
+                try {
+                    const hustlePoints = cardHustle.textContent.trim().replace(/[^\d,]/g, '');
+                    await navigator.clipboard.writeText(hustlePoints);
+                    alert('✅ Agora é só colar os pontos ('+hustlePoints+') no outro app!');
+                } catch (err) {
+                    console.error('Erro ao copiar para a área de transferência:', err);
+                    alert('Falha ao copiar os pontos hustle. Tente novamente.');
+                }
+            });
+            button.setAttribute('data-listener-added', 'true');
+        }
+    }
+}
+
+
+// Atualizar o botão quando o formulário for enviado
+document.getElementById('calcForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    // Código existente de cálculo...
+    setTimeout(atualizarBotaoCopiarHustle, 0); // Garante que o botão seja atualizado após o cálculo
+});
+
 // Adicionar listener para o toggle de mostrar/ocultar pontos Hustle
 document.getElementById('toggleHustle').addEventListener('change', function () {
     const hustleContainers = document.querySelectorAll('.meta-item:has(.hustle-points)');
     const isChecked = this.checked;
+
+    // Atualizar o botão de copiar pontos Hustle
+    atualizarBotaoCopiarHustle();
 
     // Salvar preferência no localStorage
     localStorage.setItem('showHustlePoints', isChecked);
@@ -719,6 +758,9 @@ document.getElementById('toggleHustle').addEventListener('change', function () {
     if (shareCard && shareCard.style.display !== 'none') {
         atualizarCardOverlayDoShareCard();
     }
+
+    // Atualizar o botão de copiar pontos Hustle
+    atualizarBotaoCopiarHustle();
 });
 
 // Verificar preferência salva ao carregar a página
@@ -735,6 +777,9 @@ document.addEventListener('DOMContentLoaded', function () {
     hustleContainers.forEach(container => {
         container.style.display = showHustlePoints ? 'unset' : 'none';
     });
+
+    // Atualizar o botão de copiar pontos Hustle
+    atualizarBotaoCopiarHustle();
 });
 
 // Inicializar o título
@@ -1126,7 +1171,7 @@ function prepararCardClonado(srcCard, clone) {
     clone.style.display = 'block';
     clone.style.background = srcCard.style.background;
     clone.style.color = srcCard.style.color;
-    
+
     // Copiar propriedades tipográficas para evitar variações por contexto
     try {
         const cs = window.getComputedStyle(srcCard);
@@ -1136,17 +1181,17 @@ function prepararCardClonado(srcCard, clone) {
         ];
         for (const p of props) clone.style[p] = cs[p];
     } catch (_) { }
-    
+
     // Adicionar pontos Hustle acima da zone-phrase
     try {
         // Verificar se os pontos Hustle devem ser exibidos
         const showHustlePoints = localStorage.getItem('showHustlePoints') !== 'false'; // true por padrão
         const srcHustlePoints = srcCard.querySelector('#cardHustle');
         const zp = clone.querySelector('.zone-phrase');
-        if (showHustlePoints && srcHustlePoints && srcHustlePoints.textContent && 
+        if (showHustlePoints && srcHustlePoints && srcHustlePoints.textContent &&
             srcHustlePoints.textContent.trim() !== '-' && zp) {
             const hustlePoints = srcHustlePoints.textContent.trim();
-            
+
             // Criar container para os pontos Hustle
             const hustleDiv = document.createElement('div');
             hustleDiv.className = 'hustle-points-display';
@@ -1155,27 +1200,27 @@ function prepararCardClonado(srcCard, clone) {
             hustleDiv.style.fontSize = '1rem';
             hustleDiv.style.fontWeight = '800';
             hustleDiv.style.color = srcHustlePoints.style.color || '';
-            
+
             // Criar ícone de fogo
             const hustleIcon = document.createElement('span');
             hustleIcon.textContent = '💪 ';
             hustleIcon.style.display = 'inline-block';
-            
+
             // Criar texto com os pontos Hustle
             const hustleText = document.createElement('span');
             hustleText.textContent = hustlePoints.endsWith('pts') ? hustlePoints : `${hustlePoints} pts`;
-            
+
             // Montar o elemento
             hustleDiv.appendChild(hustleIcon);
             hustleDiv.appendChild(hustleText);
-            
+
             // Inserir antes da zone-phrase
             zp.parentNode.insertBefore(hustleDiv, zp);
         }
-    } catch (e) { 
+    } catch (e) {
         console.error('Erro ao adicionar pontos Hustle ao card:', e);
     }
-    
+
     // Ajuste específico do clone: aplicar frasesPrint e espaçamento/estilos da zone-phrase para print/export
     try {
         const zp = clone.querySelector('.zone-phrase');
@@ -1301,13 +1346,13 @@ function atualizarCardOverlayDoShareCard() {
         // Atualiza conteúdo textual do clone para refletir mudanças
         const fresh = srcCard.cloneNode(true);
         prepararCardClonado(srcCard, fresh);
-        
+
         // Configurações específicas do overlay
         fresh.style.position = 'absolute';
         fresh.style.left = _compose.cardEl.style.left || '16px';
         fresh.style.top = _compose.cardEl.style.top || '16px';
         fresh.style.pointerEvents = 'none';
-        
+
         // Atualiza apenas metrics; mantém baseWidth congelada
         const cs = window.getComputedStyle(srcCard);
         _compose.baseWidth = (_compose.frozenBaseWidth != null) ? _compose.frozenBaseWidth : _compose.baseWidth;
@@ -1317,19 +1362,19 @@ function atualizarCardOverlayDoShareCard() {
             hPadding: num(cs.paddingLeft) + num(cs.paddingRight),
             hBorder: num(cs.borderLeftWidth) + num(cs.borderRightWidth)
         };
-        
+
         // manter largura base e aplicar escala via transform
         fresh.style.boxSizing = cs.boxSizing;
         const hPadding = num(cs.paddingLeft) + num(cs.paddingRight);
         const hBorder = num(cs.borderLeftWidth) + num(cs.borderRightWidth);
         let baseContent = _compose.baseWidth || fresh.getBoundingClientRect().width;
         if (cs.boxSizing === 'content-box') baseContent = Math.max(0, (_compose.baseWidth || 0) - hPadding - hBorder);
-        
+
         // aplica escala atual
         const s2 = (_compose.scale / 100);
         fresh.style.transformOrigin = 'top left';
         fresh.style.transform = `scale(${s2})`;
-        
+
         _compose.cardEl.replaceWith(fresh);
         _compose.cardEl = fresh;
     }
